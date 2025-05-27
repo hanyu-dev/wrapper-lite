@@ -1,0 +1,24 @@
+[package]
+name = "wrapper-lite"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.56.0"
+
+# === Publication info ===
+authors = ["Hantong Chen <cxwdyx620@gmail.com>"]
+categories = ["development-tools"]
+description = "Helper macro for creating a wrapper over any type (new-type idiom)."
+keywords = ["macro", "wrapper"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/hanyu-dev/wrapper-lite"
+
+[dependencies]
+rustversion = { version = "1.0.21", optional = true }
+
+[features]
+default = ["const-mut-method"]
+
+# Create const method within mutable context for the wrapper type.
+# `dep:xxx` syntax is available since Rust 1.60.
+const-mut-method = ["rustversion"]
