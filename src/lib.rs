@@ -174,14 +174,16 @@ macro_rules! general_wrapper {
 ///     pub ExampleWrapperDebugName<'a, P>(&'a P)
 /// }
 ///
+/// let data = "Hello".to_string();
+///
 /// // Here we transparently print the debug output of the inner type.
 /// assert_eq!(
-///     format!("{:?}", ExampleWrapperDebug { inner: "Hello" }),
+///     format!("{:?}", ExampleWrapperDebug { inner: &data }),
 ///     "\"Hello\""
 /// );
 /// // Here we only print the name of the wrapper type.
 /// assert_eq!(
-///     format!("{:?}", ExampleWrapperDebugName { inner: "Hello" }),
+///     format!("{:?}", ExampleWrapperDebugName { inner: &data }),
 ///     "ExampleWrapperDebugName"
 /// );
 /// ```
@@ -282,12 +284,12 @@ macro_rules! wrapper {
     ) => {
         $(#[$outer])*
         #[repr(transparent)]
-        $vis struct $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        $vis struct $name$(<$($lt),+>)? {
             /// Inner value
             $inner_vis inner: $inner_ty,
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             #[inline(always)]
             #[doc = concat!("Creates a new instance of [`", stringify!($name), "`]")]
             $inner_vis const fn const_from(inner: $inner_ty) -> Self {
@@ -314,7 +316,7 @@ macro_rules! wrapper {
         }
     ) => {
         $(#[$outer])*
-        $vis struct $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        $vis struct $name$(<$($lt),+>)? {
             $(#[$field_inner_meta])*
             $inner_vis inner: $inner_ty,
             $(
@@ -323,7 +325,7 @@ macro_rules! wrapper {
             ),*
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             #[inline(always)]
             #[doc = concat!("Creates a new instance of [`", stringify!($name), "`]")]
             $inner_vis const fn const_from(inner: $inner_ty) -> Self {
@@ -353,7 +355,7 @@ macro_rules! wrapper {
         }
     ) => {
         $(#[$outer])*
-        $vis struct $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        $vis struct $name$(<$($lt),+>)? {
             $(#[$field_inner_meta])*
             $inner_vis inner: $inner_ty
             $(
@@ -508,13 +510,13 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$inner_ty> for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_ref(&self) -> &$inner_ty {
                 &self.inner
             }
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             /// Returns a reference to the inner value.
             #[inline(always)]
             pub const fn as_inner(&self) -> &$inner_ty {
@@ -536,13 +538,13 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$inner_ty> for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_ref(&self) -> &$inner_ty {
                 &self.inner
             }
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             /// Returns a reference to the inner value.
             #[inline(always)]
             pub const fn as_inner(&self) -> &$inner_ty {
@@ -561,13 +563,13 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $inner_ty {
                 &mut self.inner
             }
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             /// Returns a reference to the inner value.
             #[inline(always)]
             pub const fn as_inner_mut(&mut self) -> &mut $inner_ty {
@@ -589,13 +591,13 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $inner_ty {
                 &mut self.inner
             }
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             /// Returns a reference to the inner value.
             #[cfg_attr(feature = "const-mut-method", rustversion::attr(since(1.83), const))]
             #[inline(always)]
@@ -614,7 +616,7 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$inner_ty> for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$inner_ty {
                 &self.inner
             }
@@ -634,7 +636,7 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$inner_ty> for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$inner_ty {
                 &self.inner
             }
@@ -650,7 +652,7 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)?
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt),+>)?
         where
             $inner_ty: ::core::fmt::Debug,
         {
@@ -673,7 +675,7 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)?
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt),+>)?
         where
             $inner_ty: ::core::fmt::Debug,
         {
@@ -692,7 +694,7 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt),+>)? {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 f.debug_struct(stringify!($name)).finish()
             }
@@ -712,7 +714,7 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt),+>)? {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 f.debug_struct(stringify!($name)).finish()
             }
@@ -728,7 +730,7 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
             type Target = $inner_ty;
 
             fn deref(&self) -> &Self::Target {
@@ -736,7 +738,7 @@ macro_rules! wrapper {
             }
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.inner
             }
@@ -756,7 +758,7 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
             type Target = $inner_ty;
 
             fn deref(&self) -> &Self::Target {
@@ -764,7 +766,7 @@ macro_rules! wrapper {
             }
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.inner
             }
@@ -780,7 +782,7 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
             type Target = $inner_ty;
 
             fn deref(&self) -> &Self::Target {
@@ -802,7 +804,7 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
             type Target = $inner_ty;
 
             fn deref(&self) -> &Self::Target {
@@ -820,13 +822,13 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::From<$inner_ty> for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::From<$inner_ty> for $name$(<$($lt),+>)? {
             fn from(inner: $inner_ty) -> Self {
                 Self::const_from(inner)
             }
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             /// Creates a new instance of the wrapper type from the inner value.
             #[allow(unreachable_pub)]
             #[inline(always)]
@@ -849,13 +851,13 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::From<$inner_ty> for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::From<$inner_ty> for $name$(<$($lt),+>)? {
             fn from(inner: $inner_ty) -> Self {
                 Self::const_from(inner)
             }
         }
 
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             /// Creates a new instance of the wrapper type from the inner value.
             #[allow(unreachable_pub)]
             #[inline(always)]
@@ -1196,8 +1198,8 @@ mod complex {
         #[wrapper_impl(From)]
         #[repr(transparent)]
         #[derive(Clone)]
-        pub struct TestWrapperComplex<'a, 'b> {
-            inner: String,
+        pub struct TestWrapperComplex<'a, 'b: 'a, P: Sized + Clone> {
+            inner: P,
             _a: ::core::marker::PhantomData<&'a ()>,
             _b: ::core::marker::PhantomData<&'b ()>
         }
@@ -1205,15 +1207,58 @@ mod complex {
 
     #[test]
     fn assert_impls_TestWrapperComplex() {
-        _assert_impl_debug::<TestWrapperComplex<'_, '_>>();
-        _assert_impl_as_ref::<TestWrapperComplex<'_, '_>, _>();
-        _assert_impl_as_mut::<TestWrapperComplex<'_, '_>, _>();
-        _assert_impl_borrow::<TestWrapperComplex<'_, '_>, String>();
-        _assert_impl_deref_mut::<TestWrapperComplex<'_, '_>, _>();
-        // _assert_impl_from::<TestWrapperComplex<'_, '_>, String>();
+        _assert_impl_debug::<TestWrapperComplex<'_, '_, String>>();
+        _assert_impl_as_ref::<TestWrapperComplex<'_, '_, String>, _>();
+        _assert_impl_as_mut::<TestWrapperComplex<'_, '_, String>, _>();
+        _assert_impl_borrow::<TestWrapperComplex<'_, '_, String>, String>();
+        _assert_impl_deref_mut::<TestWrapperComplex<'_, '_, String>, _>();
+        // _assert_impl_from::<TestWrapperComplex<'_, '_, String>, String>();
 
         assert_eq!(
-            core::mem::size_of::<TestWrapperComplex<'_, '_>>(),
+            core::mem::size_of::<TestWrapperComplex<'_, '_, String>>(),
+            core::mem::size_of::<String>()
+        );
+    }
+}
+
+mod test_expand {
+    #![allow(unused)]
+    #![allow(unreachable_pub)]
+    #![allow(dead_code)]
+    #![allow(non_snake_case)]
+
+    use alloc::string::String;
+    use core::fmt::Debug;
+
+    use super::*;
+
+    wrapper! {
+        #[wrapper_impl(AsMut)]
+        #[wrapper_impl(AsRef)]
+        #[wrapper_impl(Borrow)]
+        #[wrapper_impl(Debug)]
+        #[wrapper_impl(DerefMut)]
+        #[wrapper_impl(From)]
+        #[repr(transparent)]
+        #[derive(Clone)]
+        pub struct TestWrapperComplex<'a, 'b: 'a, P: Debug + Clone> {
+            inner: P,
+            _a: ::core::marker::PhantomData<&'a ()>,
+            _b: ::core::marker::PhantomData<&'b ()>
+        }
+    }
+
+    #[test]
+    fn assert_impls_TestWrapperComplex() {
+        _assert_impl_debug::<TestWrapperComplex<'_, '_, String>>();
+        _assert_impl_as_ref::<TestWrapperComplex<'_, '_, String>, _>();
+        _assert_impl_as_mut::<TestWrapperComplex<'_, '_, String>, _>();
+        _assert_impl_borrow::<TestWrapperComplex<'_, '_, String>, String>();
+        _assert_impl_deref_mut::<TestWrapperComplex<'_, '_, String>, _>();
+        // _assert_impl_from::<TestWrapperComplex<'_, '_, String>, String>();
+
+        assert_eq!(
+            core::mem::size_of::<TestWrapperComplex<'_, '_, String>>(),
             core::mem::size_of::<String>()
         );
     }
