@@ -31,7 +31,8 @@ extern crate alloc;
 /// This is equivalent to using the `wrapper!` macro with the following
 /// attributes:
 ///
-/// ```rust,ignore
+/// ```rust
+/// # use wrapper_lite::*;
 /// wrapper! {
 ///     #[wrapper_impl(AsRef)]
 ///     #[wrapper_impl(Borrow)]
@@ -145,6 +146,46 @@ macro_rules! general_wrapper {
 /// - Does **NOT** automatically apply `repr(transparent)` attribute, since the
 ///   macro doesn't know if other fields were zero-sized types (ZST).
 ///
+/// ## Special attributes
+///
+/// ### `Debug` and `DebugName`
+///
+/// We offer `Debug` and `DebugName` attributes to control how the wrapper type
+/// is printed when using the `Debug` trait, instead of `#[derive(Debug)]`.
+///
+/// - `#[wrapper_impl(Debug)]`: transparently implements the `Debug` trait if
+///   the inner type implements it. The debug output is the same as the inner
+///   one.
+/// - `#[wrapper_impl(DebugName)]`: implements the `Debug` trait, but only
+///   prints the name of the wrapper type.
+///
+/// ```rust
+/// # use wrapper_lite::*;
+/// #
+/// wrapper! {
+///     #[wrapper_impl(Debug)]
+///     #[derive(Clone, Copy)]
+///     pub ExampleWrapperDebug<'a, P>(&'a P)
+/// }
+///
+/// wrapper! {
+///     #[wrapper_impl(DebugName)]
+///     #[derive(Clone, Copy)]
+///     pub ExampleWrapperDebugName<'a, P>(&'a P)
+/// }
+///
+/// // Here we transparently print the debug output of the inner type.
+/// assert_eq!(
+///     format!("{:?}", ExampleWrapperDebug { inner: "Hello" }),
+///     "\"Hello\""
+/// );
+/// // Here we only print the name of the wrapper type.
+/// assert_eq!(
+///     format!("{:?}", ExampleWrapperDebugName { inner: "Hello" }),
+///     "ExampleWrapperDebugName"
+/// );
+/// ```
+///
 /// ## Notice
 ///
 /// - The `wrapper_impl` attribute must be on top of any other attributes.
@@ -205,6 +246,26 @@ macro_rules! wrapper {
     (
         @INTERNEL IMPL
         #[wrapper_impl(From)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNEL IMPL
+            $($tt)*
+        }
+    };
+    (
+        @INTERNEL IMPL
+        #[wrapper_impl(Debug)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNEL IMPL
+            $($tt)*
+        }
+    };
+    (
+        @INTERNEL IMPL
+        #[wrapper_impl(DebugName)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
@@ -345,6 +406,40 @@ macro_rules! wrapper {
     ) => {
         $crate::wrapper! {
             @INTERNEL WRAPPER_IMPL_BORROW
+            $($tt)*
+        }
+
+        $crate::wrapper! {
+            @INTERNEL WRAPPER_IMPL
+            $($tt)*
+        }
+    };
+
+    // Extract wrapper impl for `Debug` trait.
+    (
+        @INTERNEL WRAPPER_IMPL
+        #[wrapper_impl(Debug)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNEL WRAPPER_IMPL_DEBUG
+            $($tt)*
+        }
+
+        $crate::wrapper! {
+            @INTERNEL WRAPPER_IMPL
+            $($tt)*
+        }
+    };
+
+    // Extract wrapper impl for `Debug` trait  printing its name only.
+    (
+        @INTERNEL WRAPPER_IMPL
+        #[wrapper_impl(DebugName)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNEL WRAPPER_IMPL_DEBUG_NAME
             $($tt)*
         }
 
@@ -547,7 +642,85 @@ macro_rules! wrapper {
     };
     // ================ Impl `Borrow` trait for the wrapper type. ================
 
-    // ================ Impl `Deref` and `DerefMut` traits for the wrapper type. ================
+    // ================ Impl `Debug` trait for the wrapper type. ================
+    (
+        @INTERNEL WRAPPER_IMPL_DEBUG
+        $(#[$meta:meta])*
+        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        ($inner_vis:vis $inner_ty:ty)
+        $($tt:tt)*
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)?
+        where
+            $inner_ty: ::core::fmt::Debug,
+        {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                self.inner.fmt(f)
+            }
+        }
+    };
+    (
+        @INTERNEL WRAPPER_IMPL_DEBUG
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
+            )*
+            $(,)?
+        }
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)?
+        where
+            $inner_ty: ::core::fmt::Debug,
+        {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                self.inner.fmt(f)
+            }
+        }
+    };
+    // ================ Impl `Debug` trait for the wrapper type. ================
+
+    // ================ Impl `DebugName` trait for the wrapper type. ================
+    (
+        @INTERNEL WRAPPER_IMPL_DEBUG_NAME
+        $(#[$meta:meta])*
+        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        ($inner_vis:vis $inner_ty:ty)
+        $($tt:tt)*
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                f.debug_struct(stringify!($name)).finish()
+            }
+        }
+    };
+    (
+        @INTERNEL WRAPPER_IMPL_DEBUG_NAME
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
+            )*
+            $(,)?
+        }
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt$(:$clt$(+$dlt)*)?),+>)? {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                f.debug_struct(stringify!($name)).finish()
+            }
+        }
+    };
+    // ================ Impl `DebugName` trait for the wrapper type. ================
+
+    // ================ Impl `DerefMut` traits for the wrapper type. ================
     (
         @INTERNEL WRAPPER_IMPL_DEREF_MUT
         $(#[$meta:meta])*
@@ -597,7 +770,7 @@ macro_rules! wrapper {
             }
         }
     };
-    // ================ Impl `Deref` and `DerefMut` traits for the wrapper type. ================
+    // ================ Impl `DerefMut` traits for the wrapper type. ================
 
     // ================ Impl `Deref` trait for the wrapper type. ================
     (
@@ -820,6 +993,38 @@ mod simple {
     }
 
     wrapper! {
+        #[wrapper_impl(Debug)]
+        pub TestWrapperImplDebug(String)
+    }
+
+    wrapper! {
+        #[wrapper_impl(DebugName)]
+        pub TestWrapperImplDebugName(String)
+    }
+
+    fn assert_impls_TestWrapperImplDebug() {
+        _assert_impl_debug::<TestWrapperImplDebug>();
+        _assert_impl_debug::<TestWrapperImplDebugName>();
+    }
+
+    wrapper! {
+        #[wrapper_impl(Debug)]
+        #[derive(Default)]
+        pub TestWrapperImplDebugMixed(String)
+    }
+
+    wrapper! {
+        #[wrapper_impl(DebugName)]
+        #[derive(Default)]
+        pub TestWrapperImplDebugNameMixed(String)
+    }
+
+    fn assert_impls_TestWrapperImplDebugNameMixed() {
+        _assert_impl_debug::<TestWrapperImplDebugMixed>();
+        _assert_impl_debug::<TestWrapperImplDebugNameMixed>();
+    }
+
+    wrapper! {
         #[wrapper_impl(Deref)]
         pub TestWrapperImplDeref(String)
     }
@@ -955,9 +1160,10 @@ mod complex {
         #[wrapper_impl(AsMut)]
         #[wrapper_impl(AsRef)]
         #[wrapper_impl(Borrow)]
+        #[wrapper_impl(Debug)]
         #[wrapper_impl(DerefMut)]
         #[wrapper_impl(From)]
-        #[derive(Debug)]
+        #[derive(Clone)]
         #[repr(transparent)]
         pub struct TestWrapperComplexConstFromInner<'a, 'b> {
             inner: String,
@@ -985,10 +1191,11 @@ mod complex {
         #[wrapper_impl(AsMut)]
         #[wrapper_impl(AsRef)]
         #[wrapper_impl(Borrow)]
+        #[wrapper_impl(Debug)]
         #[wrapper_impl(DerefMut)]
         #[wrapper_impl(From)]
         #[repr(transparent)]
-        #[derive(Debug)]
+        #[derive(Clone)]
         pub struct TestWrapperComplex<'a, 'b> {
             inner: String,
             _a: ::core::marker::PhantomData<&'a ()>,
