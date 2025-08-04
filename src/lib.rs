@@ -280,7 +280,7 @@ macro_rules! wrapper {
     (
         @INTERNEL IMPL
         $(#[$outer:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty)
+        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         $(#[$outer])*
         #[repr(transparent)]
@@ -946,6 +946,20 @@ mod simple {
     use ::alloc::string::String;
 
     use super::*;
+
+    #[rustfmt::skip]
+    wrapper! {
+        #[wrapper_impl(AsMut)]
+        #[wrapper_impl(AsRef)]
+        #[wrapper_impl(Borrow)]
+        #[wrapper_impl(Debug)]
+        #[wrapper_impl(DerefMut)]
+        #[wrapper_impl(From)] // Multiple wrapper_impl attributes
+        #[derive(Clone, Default)]
+        #[derive(PartialEq)] // Multiple derive attributes
+        /// Test Docs
+        pub TestWrapperAllMixed(String); // trailing semicolon
+    }
 
     wrapper! {
         #[wrapper_impl(AsRef)]
