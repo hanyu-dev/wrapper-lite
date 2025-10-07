@@ -14,11 +14,5 @@ readme = "README.md"
 repository = "https://github.com/hanyu-dev/wrapper-lite"
 
 [dependencies]
-rustversion = { version = "1.0.21", optional = true }
 
 [features]
-default = ["const-mut-method"]
-
-# Create const method within mutable context for the wrapper type.
-# `dep:xxx` syntax is available since Rust 1.60.
-const-mut-method = ["rustversion"]

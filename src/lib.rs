@@ -160,6 +160,23 @@ macro_rules! general_wrapper {
 /// );
 /// ```
 ///
+/// ## `ConstAsMut`
+///
+/// Like `AsMut`, but instead generates a const version of `as_inner_mut` method
+/// (stable since Rust 1.83.0+).
+///
+/// ```rust,no_run
+/// wrapper_lite::wrapper!(
+///     #[wrapper_impl(ConstAsMut)]
+///     #[derive(Debug, Clone, Copy)]
+///     pub struct ExampleWrapper<P>(pub(crate) P);
+/// );
+///
+/// const fn const_fn_example<P>(w: &mut ExampleWrapper<P>) -> &mut P {
+///     w.as_inner_mut()
+/// }
+/// ```
+///
 /// ## Notice
 ///
 /// - The `wrapper_impl` attribute must be on top of any other attributes.
@@ -180,6 +197,16 @@ macro_rules! wrapper {
     (
         @INTERNAL IMPL
         #[wrapper_impl(AsMut)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNAL IMPL
+            $($tt)*
+        }
+    };
+    (
+        @INTERNAL IMPL
+        #[wrapper_impl(ConstAsMut)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
@@ -371,6 +398,21 @@ macro_rules! wrapper {
             $($tt)*
         }
     };
+    (
+        @INTERNAL WRAPPER_IMPL
+        #[wrapper_impl(ConstAsMut)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL_CONST_AS_MUT
+            $($tt)*
+        }
+
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL
+            $($tt)*
+        }
+    };
 
     // Extract wrapper impl for `Borrow` trait.
     (
@@ -542,9 +584,9 @@ macro_rules! wrapper {
         }
 
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
-            /// Returns a reference to the inner value.
             #[inline(always)]
-            pub const fn as_inner_mut(&mut self) -> &mut $inner_ty {
+            /// Returns a mutable reference to the inner value.
+            pub fn as_inner_mut(&mut self) -> &mut $inner_ty {
                 &mut self.inner
             }
         }
@@ -564,16 +606,68 @@ macro_rules! wrapper {
         }
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
+            #[inline(always)]
             fn as_mut(&mut self) -> &mut $inner_ty {
                 &mut self.inner
             }
         }
 
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
-            /// Returns a reference to the inner value.
-            #[cfg_attr(feature = "const-mut-method", rustversion::attr(since(1.83), const))]
             #[inline(always)]
+            /// Returns a mutable reference to the inner value.
             pub fn as_inner_mut(&mut self) -> &mut $inner_ty {
+                &mut self.inner
+            }
+        }
+    };
+
+    // Const version
+    (
+        @INTERNAL WRAPPER_IMPL_CONST_AS_MUT
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
+        ($inner_vis:vis $inner_ty:ty)
+        $($tt:tt)*
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
+            fn as_mut(&mut self) -> &mut $inner_ty {
+                &mut self.inner
+            }
+        }
+
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
+            #[inline(always)]
+            /// Returns a mutable reference to the inner value.
+            pub const fn as_inner_mut(&mut self) -> &mut $inner_ty {
+                &mut self.inner
+            }
+        }
+    };
+    (
+        @INTERNAL WRAPPER_IMPL_CONST_AS_MUT
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
+            )*
+            $(,)?
+        }
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
+            #[inline(always)]
+            fn as_mut(&mut self) -> &mut $inner_ty {
+                &mut self.inner
+            }
+        }
+
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
+            #[inline(always)]
+            /// Returns a mutable reference to the inner value.
+            pub const fn as_inner_mut(&mut self) -> &mut $inner_ty {
                 &mut self.inner
             }
         }
