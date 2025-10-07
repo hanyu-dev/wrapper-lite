@@ -100,8 +100,8 @@ macro_rules! general_wrapper {
 ///     #[wrapper_impl(AsRef)]
 ///     // #[wrapper_impl(Borrow)]
 ///     #[wrapper_impl(BorrowMut)]
-///     #[wrapper_impl(DerefMut)]
 ///     //     #[wrapper_impl(Deref)]
+///     #[wrapper_impl(DerefMut)]
 ///     #[wrapper_impl(From)]
 ///     #[wrapper_impl(Debug)]
 ///     #[derive(Clone, Copy, PartialEq, Eq)]
@@ -182,8 +182,9 @@ macro_rules! general_wrapper {
 /// ## Notice
 ///
 /// - The `wrapper_impl` attribute must be on top of any other attributes.
-/// - Should **NOT** implement `Deref` and `DerefMut` at the same time (when
-///   `DerefMut` is implemented, `Deref` would be implemented, too).
+/// - For `BorrowMut` and `DerefMut`, the macro will automatically implement the
+///   corresponding `Borrow` and `Deref` traits so you don't need to add them
+///   manually.
 macro_rules! wrapper {
     // To filter out the `wrapper_impl` attribute and extract the inner type.
     (
