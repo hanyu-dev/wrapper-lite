@@ -19,6 +19,22 @@ wrapper!(
     pub struct TestWrapperAllMixed(String);
 );
 
+#[test]
+fn assert_impls_TestWrapperAllMixed() {
+    _assert_impl_debug::<TestWrapperAllMixed>();
+    _assert_impl_as_ref::<TestWrapperAllMixed, _>();
+    _assert_impl_as_mut::<TestWrapperAllMixed, _>();
+    _assert_impl_borrow::<TestWrapperAllMixed, String>();
+    _assert_impl_borrow_mut::<TestWrapperAllMixed, String>();
+    _assert_impl_deref_mut::<TestWrapperAllMixed, _>();
+    _assert_impl_from::<TestWrapperAllMixed, String>();
+
+    assert_eq!(
+        core::mem::size_of::<TestWrapperAllMixed>(),
+        core::mem::size_of::<String>()
+    );
+}
+
 wrapper!(
     #[wrapper_impl(AsRef)]
     pub struct TestWrapperImplAsRef(String);
