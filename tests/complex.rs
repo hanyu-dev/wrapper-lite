@@ -43,6 +43,7 @@ wrapper! {
     // #[wrapper_impl(Borrow)]
     #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(Debug)]
+    // #[wrapper_impl(Deref)]
     #[wrapper_impl(DerefMut)]
     #[wrapper_impl(From)]
     #[derive(Clone)]
@@ -61,6 +62,7 @@ fn assert_impls_TestWrapperComplexConstFromInner() {
     _assert_impl_as_mut::<TestWrapperComplexConstFromInner<'_, '_>, _>();
     _assert_impl_borrow::<TestWrapperComplexConstFromInner<'_, '_>, String>();
     _assert_impl_borrow_mut::<TestWrapperComplexConstFromInner<'_, '_>, String>();
+    _assert_impl_deref::<TestWrapperComplexConstFromInner<'_, '_>, _>();
     _assert_impl_deref_mut::<TestWrapperComplexConstFromInner<'_, '_>, _>();
     _assert_impl_from::<TestWrapperComplexConstFromInner<'_, '_>, String>();
 
@@ -76,6 +78,7 @@ wrapper! {
     // #[wrapper_impl(Borrow)]
     #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(Debug)]
+    // #[wrapper_impl(Deref)]
     #[wrapper_impl(DerefMut)]
     #[wrapper_impl(From)]
     #[repr(transparent)]
@@ -94,6 +97,7 @@ fn assert_impls_TestWrapperComplex() {
     _assert_impl_as_mut::<TestWrapperComplex<'_, '_, String>, _>();
     _assert_impl_borrow::<TestWrapperComplex<'_, '_, String>, String>();
     _assert_impl_borrow_mut::<TestWrapperComplex<'_, '_, String>, String>();
+    _assert_impl_deref::<TestWrapperComplex<'_, '_, String>, _>();
     _assert_impl_deref_mut::<TestWrapperComplex<'_, '_, String>, _>();
     // _assert_impl_from::<TestWrapperComplex<'_, '_, String>, String>();
 

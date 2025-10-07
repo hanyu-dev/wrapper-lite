@@ -150,6 +150,7 @@ wrapper!(
 );
 
 fn assert_impls_TestWrapperImplDerefMut() {
+    _assert_impl_deref::<TestWrapperImplDerefMut, _>();
     _assert_impl_deref_mut::<TestWrapperImplDerefMut, _>();
 }
 
@@ -161,6 +162,7 @@ wrapper!(
 
 fn assert_impls_TestWrapperImplDerefMutMixed() {
     _assert_impl_debug::<TestWrapperImplDerefMutMixed>();
+    _assert_impl_deref::<TestWrapperImplDerefMutMixed, _>();
     _assert_impl_deref_mut::<TestWrapperImplDerefMutMixed, _>();
 }
 

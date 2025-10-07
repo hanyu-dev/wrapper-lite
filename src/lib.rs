@@ -162,7 +162,7 @@ macro_rules! general_wrapper {
 /// );
 /// ```
 ///
-/// ## `ConstAsMut`
+/// ### `ConstAsMut`
 ///
 /// Like `AsMut`, but instead generates a const version of `as_inner_mut` method
 /// (stable since Rust 1.83.0+).
@@ -179,12 +179,28 @@ macro_rules! general_wrapper {
 /// }
 /// ```
 ///
-/// ## Notice
+/// ## Notes
 ///
 /// - The `wrapper_impl` attribute must be on top of any other attributes.
 /// - For `BorrowMut` and `DerefMut`, the macro will automatically implement the
-///   corresponding `Borrow` and `Deref` traits so you don't need to add them
-///   manually.
+///   corresponding `Borrow` and `Deref` traits, so the following two examples
+///   will fail to compile:
+///
+///   ```compile_fail
+///   wrapper_lite::wrapper!(
+///       #[wrapper_impl(Borrow)]
+///       #[wrapper_impl(BorrowMut)]
+///       pub struct ExampleWrapper<P>(pub(crate) P);
+///   );
+///   ```
+///
+///   ```compile_fail
+///   wrapper_lite::wrapper!(
+///       #[wrapper_impl(Deref)]
+///       #[wrapper_impl(DerefMut)]
+///       pub struct ExampleWrapper<P>(pub(crate) P);
+///   );
+///   ```
 macro_rules! wrapper {
     // To filter out the `wrapper_impl` attribute and extract the inner type.
     (
@@ -506,6 +522,11 @@ macro_rules! wrapper {
         #[wrapper_impl(DerefMut)]
         $($tt:tt)*
     ) => {
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL_DEREF
+            $($tt)*
+        }
+
         $crate::wrapper! {
             @INTERNAL WRAPPER_IMPL_DEREF_MUT
             $($tt)*
@@ -867,14 +888,6 @@ macro_rules! wrapper {
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
-            type Target = $inner_ty;
-
-            fn deref(&self) -> &Self::Target {
-                &self.inner
-            }
-        }
-
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.inner
@@ -895,14 +908,6 @@ macro_rules! wrapper {
             $(,)?
         }
     ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
-            type Target = $inner_ty;
-
-            fn deref(&self) -> &Self::Target {
-                &self.inner
-            }
-        }
-
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.inner
