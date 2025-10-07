@@ -64,7 +64,8 @@ macro_rules! general_wrapper {
 /// wrapper_lite::wrapper!(
 ///     #[wrapper_impl(AsRef)]
 ///     #[wrapper_impl(AsMut)]
-///     #[wrapper_impl(Borrow)]
+///     // #[wrapper_impl(Borrow)]
+///     #[wrapper_impl(BorrowMut)]
 ///     // #[wrapper_impl(Deref)]
 ///     #[wrapper_impl(DerefMut)]
 ///     #[wrapper_impl(From)]
@@ -97,7 +98,8 @@ macro_rules! general_wrapper {
 /// wrapper_lite::wrapper!(
 ///     #[wrapper_impl(AsMut)]
 ///     #[wrapper_impl(AsRef)]
-///     #[wrapper_impl(Borrow)]
+///     // #[wrapper_impl(Borrow)]
+///     #[wrapper_impl(BorrowMut)]
 ///     #[wrapper_impl(DerefMut)]
 ///     //     #[wrapper_impl(Deref)]
 ///     #[wrapper_impl(From)]
@@ -217,6 +219,16 @@ macro_rules! wrapper {
     (
         @INTERNAL IMPL
         #[wrapper_impl(Borrow)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNAL IMPL
+            $($tt)*
+        }
+    };
+    (
+        @INTERNAL IMPL
+        #[wrapper_impl(BorrowMut)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
@@ -422,6 +434,28 @@ macro_rules! wrapper {
     ) => {
         $crate::wrapper! {
             @INTERNAL WRAPPER_IMPL_BORROW
+            $($tt)*
+        }
+
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL
+            $($tt)*
+        }
+    };
+
+    // Extract wrapper impl for `BorrowMut` trait.
+    (
+        @INTERNAL WRAPPER_IMPL
+        #[wrapper_impl(BorrowMut)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL_BORROW
+            $($tt)*
+        }
+
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL_BORROW_MUT
             $($tt)*
         }
 
@@ -705,6 +739,42 @@ macro_rules! wrapper {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$inner_ty {
                 &self.inner
+            }
+        }
+    };
+    // ================ Impl `Borrow` trait for the wrapper type. ================
+
+    // ================ Impl `BorrowMut` trait for the wrapper type. ================
+    (
+        @INTERNAL WRAPPER_IMPL_BORROW_MUT
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
+        ($inner_vis:vis $inner_ty:ty)
+        $($tt:tt)*
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::BorrowMut<$inner_ty> for $name$(<$($lt),+>)? {
+            fn borrow_mut(&mut self) -> &mut $inner_ty {
+                &mut self.inner
+            }
+        }
+    };
+    (
+        @INTERNAL WRAPPER_IMPL_BORROW_MUT
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
+            )*
+            $(,)?
+        }
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::BorrowMut<$inner_ty> for $name$(<$($lt),+>)? {
+            fn borrow_mut(&mut self) -> &mut $inner_ty {
+                &mut self.inner
             }
         }
     };

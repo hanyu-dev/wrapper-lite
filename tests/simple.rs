@@ -8,7 +8,8 @@ use wrapper_lite::*;
 wrapper!(
     #[wrapper_impl(AsMut)]
     #[wrapper_impl(AsRef)]
-    #[wrapper_impl(Borrow)]
+    // #[wrapper_impl(Borrow)]
+    #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(Debug)]
     #[wrapper_impl(DerefMut)]
     #[wrapper_impl(From)] // Multiple wrapper_impl attributes
@@ -52,6 +53,16 @@ wrapper!(
 
 fn assert_impls_TestWrapperImplBorrow() {
     _assert_impl_borrow::<TestWrapperImplBorrow, String>();
+}
+
+wrapper!(
+    #[wrapper_impl(BorrowMut)]
+    pub struct TestWrapperImplBorrowMut(String);
+);
+
+fn assert_impls_TestWrapperImplBorrowMut() {
+    _assert_impl_borrow::<TestWrapperImplBorrowMut, String>();
+    _assert_impl_borrow_mut::<TestWrapperImplBorrowMut, String>();
 }
 
 wrapper!(
@@ -208,6 +219,12 @@ where
 fn _assert_impl_borrow<T, U>()
 where
     T: ::core::borrow::Borrow<U>,
+{
+}
+
+fn _assert_impl_borrow_mut<T, U>()
+where
+    T: ::core::borrow::BorrowMut<U>,
 {
 }
 

@@ -40,7 +40,8 @@ wrapper!(
 wrapper! {
     #[wrapper_impl(AsMut)]
     #[wrapper_impl(AsRef)]
-    #[wrapper_impl(Borrow)]
+    // #[wrapper_impl(Borrow)]
+    #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(Debug)]
     #[wrapper_impl(DerefMut)]
     #[wrapper_impl(From)]
@@ -59,6 +60,7 @@ fn assert_impls_TestWrapperComplexConstFromInner() {
     _assert_impl_as_ref::<TestWrapperComplexConstFromInner<'_, '_>, _>();
     _assert_impl_as_mut::<TestWrapperComplexConstFromInner<'_, '_>, _>();
     _assert_impl_borrow::<TestWrapperComplexConstFromInner<'_, '_>, String>();
+    _assert_impl_borrow_mut::<TestWrapperComplexConstFromInner<'_, '_>, String>();
     _assert_impl_deref_mut::<TestWrapperComplexConstFromInner<'_, '_>, _>();
     _assert_impl_from::<TestWrapperComplexConstFromInner<'_, '_>, String>();
 
@@ -71,7 +73,8 @@ fn assert_impls_TestWrapperComplexConstFromInner() {
 wrapper! {
     #[wrapper_impl(AsMut)]
     #[wrapper_impl(AsRef)]
-    #[wrapper_impl(Borrow)]
+    // #[wrapper_impl(Borrow)]
+    #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(Debug)]
     #[wrapper_impl(DerefMut)]
     #[wrapper_impl(From)]
@@ -90,6 +93,7 @@ fn assert_impls_TestWrapperComplex() {
     _assert_impl_as_ref::<TestWrapperComplex<'_, '_, String>, _>();
     _assert_impl_as_mut::<TestWrapperComplex<'_, '_, String>, _>();
     _assert_impl_borrow::<TestWrapperComplex<'_, '_, String>, String>();
+    _assert_impl_borrow_mut::<TestWrapperComplex<'_, '_, String>, String>();
     _assert_impl_deref_mut::<TestWrapperComplex<'_, '_, String>, _>();
     // _assert_impl_from::<TestWrapperComplex<'_, '_, String>, String>();
 
@@ -122,6 +126,12 @@ where
 fn _assert_impl_borrow<T, U>()
 where
     T: ::core::borrow::Borrow<U>,
+{
+}
+
+fn _assert_impl_borrow_mut<T, U>()
+where
+    T: ::core::borrow::BorrowMut<U>,
 {
 }
 
