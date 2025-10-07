@@ -6,20 +6,20 @@
 use wrapper_lite::*;
 
 wrapper! {
-    pub struct TestWrapperEmpty<'a, 'b> {
+    pub struct TestWrapperEmptyWithTailing<'a, 'b> {
         inner: String,
         _a: ::core::marker::PhantomData<&'a ()>,
         _b: ::core::marker::PhantomData<&'b ()>
     }
 }
 
-wrapper! {
-    pub struct TestWrapperEmptyWithTailing<'a, 'b> {
+wrapper!(
+    pub struct TestWrapperEmpty<'a, 'b> {
         inner: String,
         _a: ::core::marker::PhantomData<&'a ()>,
         _b: ::core::marker::PhantomData<&'b ()>,
     }
-}
+);
 
 wrapper! {
     pub struct TestWrapperEmptyWithDefault<'a, 'b> {
@@ -29,13 +29,13 @@ wrapper! {
     }
 }
 
-wrapper! {
+wrapper!(
     pub struct TestWrapperEmptyWithDefaultWithTailing<'a, 'b> {
         inner: String,
         _a: ::core::marker::PhantomData<&'a ()> = ::core::marker::PhantomData,
         _b: ::core::marker::PhantomData<&'b ()> = ::core::marker::PhantomData,
     }
-}
+);
 
 wrapper! {
     #[wrapper_impl(AsMut)]

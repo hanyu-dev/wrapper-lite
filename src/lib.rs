@@ -5,44 +5,39 @@
 #[macro_export]
 /// Helper macro for creating a wrapper over any type (new-type idiom).
 ///
-/// This is a shortcut for using the `wrapper!` macro with the most common impls
-/// (`AsRef`, `Borrow`, `From`).
+/// This is a shortcut for using the [`wrapper!`] macro with the most common
+/// impls (`AsRef`, `Borrow`, `From`).
 ///
 /// ```rust
-/// # use wrapper_lite::*;
-/// general_wrapper! {
+/// wrapper_lite::general_wrapper!(
 ///     #[derive(Debug, Clone, Copy)]
-///     pub ExampleWrapper<'a, P>(pub(crate) &'a P)
-/// }
+///     pub struct ExampleWrapper<'a, P>(pub(crate) &'a P);
+/// );
 /// ```
 ///
 /// This is equivalent to using the `wrapper!` macro with the following
 /// attributes:
 ///
 /// ```rust
-/// # use wrapper_lite::*;
-/// wrapper! {
+/// wrapper_lite::wrapper!(
 ///     #[wrapper_impl(AsRef)]
 ///     #[wrapper_impl(Borrow)]
 ///     #[wrapper_impl(From)]
 ///     #[derive(Debug, Clone, Copy)]
-///     pub ExampleWrapper<'a, P>(pub(crate) &'a P)
-/// }
+///     pub struct ExampleWrapper<'a, P>(pub(crate) &'a P);
+/// );
 /// ```
 ///
-/// You can certainly add attributes like `#[wrapper_impl(Deref)]` to implement
-/// other traits based on the preset ones.
+/// You can certainly add attributes like `#[wrapper_impl(Deref)]` other than
+/// the preset ones. See [`wrapper!`] for more details.
 ///
 /// ```rust
-/// # use wrapper_lite::*;
-/// general_wrapper! {
+/// wrapper_lite::general_wrapper!(
 ///     #[wrapper_impl(Deref)]
 ///     #[derive(Debug, Clone, Copy)]
-///     pub ExampleWrapper<'a, P>(pub(crate) &'a P)
-/// }
+///     pub struct ExampleWrapper<'a, P>(pub(crate) &'a P);
+/// );
 /// ```
-///
-/// See [`wrapper!`] for more details.
 macro_rules! general_wrapper {
     ($($tt:tt)+) => {
         $crate::wrapper! {
@@ -55,13 +50,18 @@ macro_rules! general_wrapper {
 }
 
 #[macro_export]
-/// Helper macro for creating a wrapper over any type (new-type idom).
+/// Helper macro for creating a wrapper over any type (new-type idiom).
 ///
-/// # Usage: basic
+/// # Usage
+///
+/// It's worth noting that `wrapper! { ... }` is almost equivalent to
+/// `wrapper!( ... );` but lacking cargo-fmt support. We recommend using the
+/// latter.
+///
+/// ## Usage: basic
 ///
 /// ```rust
-/// # use wrapper_lite::*;
-/// wrapper! {
+/// wrapper_lite::wrapper!(
 ///     #[wrapper_impl(AsRef)]
 ///     #[wrapper_impl(AsMut)]
 ///     #[wrapper_impl(Borrow)]
@@ -69,8 +69,8 @@ macro_rules! general_wrapper {
 ///     #[wrapper_impl(DerefMut)]
 ///     #[wrapper_impl(From)]
 ///     #[derive(Debug, Clone, Copy)]
-///     pub ExampleWrapper<'a, P>(pub(crate) &'a P)
-/// }
+///     pub struct ExampleWrapper<'a, P>(pub(crate) &'a P);
+/// );
 /// ```
 ///
 /// Generates const accessor methods for wrapper types implementing `AsRef` and
@@ -88,32 +88,36 @@ macro_rules! general_wrapper {
 /// ## Usage: advanced
 ///
 /// You can also create a wrapper type with a struct with multiple fields,
-/// especially when some lifetime markers or generics markers are needed.
+/// especially when some lifetime markers or generics markers are too complex,
+/// or you need some custom fields.
+///
+/// Here's an complex example:
 ///
 /// ```rust
-/// # use wrapper_lite::*;
-/// wrapper! {
+/// wrapper_lite::wrapper!(
 ///     #[wrapper_impl(AsMut)]
 ///     #[wrapper_impl(AsRef)]
 ///     #[wrapper_impl(Borrow)]
 ///     #[wrapper_impl(DerefMut)]
+///     //     #[wrapper_impl(Deref)]
 ///     #[wrapper_impl(From)]
-///     #[derive(Debug)]
+///     #[wrapper_impl(Debug)]
+///     #[derive(Clone, Copy, PartialEq, Eq)]
 ///     #[repr(transparent)]
 ///     pub struct ExampleWrapperComplex<'a, 'b, P> {
 ///         inner: P,
-///         _a: ::core::marker::PhantomData<&'a ()> = ::core::marker::PhantomData,
-///         _b: ::core::marker::PhantomData<&'b ()> = ::core::marker::PhantomData
+///         _a: ::core::marker::PhantomData<&'a ()>,
+///         _b: ::core::marker::PhantomData<&'b ()>,
 ///     }
-/// }
+/// );
 /// ```
 ///
 /// There're some limitations:
 ///
-/// - The inner field must be named as `inner` (e.g. `inner: P`).
+/// - The inner field must be named as `inner`.
 /// - When no default value is specified, the wrapper type will not implement
-///   the `From` trait.
-/// - Does **NOT** automatically apply `repr(transparent)` attribute, since the
+///   the `From` trait. Will also not generate the `const_from` method.
+/// - Does not automatically apply `repr(transparent)` attribute, since the
 ///   macro doesn't know if other fields were zero-sized types (ZST).
 ///
 /// ## Special attributes
@@ -130,19 +134,17 @@ macro_rules! general_wrapper {
 ///   prints the name of the wrapper type.
 ///
 /// ```rust
-/// # use wrapper_lite::*;
-/// #
-/// wrapper! {
+/// wrapper_lite::wrapper!(
 ///     #[wrapper_impl(Debug)]
 ///     #[derive(Clone, Copy)]
-///     pub ExampleWrapperDebug<'a, P>(&'a P)
-/// }
+///     pub struct ExampleWrapperDebug<'a, P>(&'a P);
+/// );
 ///
-/// wrapper! {
+/// wrapper_lite::wrapper!(
 ///     #[wrapper_impl(DebugName)]
 ///     #[derive(Clone, Copy)]
-///     pub ExampleWrapperDebugName<'a, P>(&'a P)
-/// }
+///     pub struct ExampleWrapperDebugName<'a, P>(&'a P);
+/// );
 ///
 /// let data = "Hello".to_string();
 ///
@@ -166,91 +168,91 @@ macro_rules! general_wrapper {
 macro_rules! wrapper {
     // To filter out the `wrapper_impl` attribute and extract the inner type.
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         #[wrapper_impl(AsRef)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL IMPL
+            @INTERNAL IMPL
             $($tt)*
         }
     };
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         #[wrapper_impl(AsMut)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL IMPL
+            @INTERNAL IMPL
             $($tt)*
         }
     };
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         #[wrapper_impl(Borrow)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL IMPL
+            @INTERNAL IMPL
             $($tt)*
         }
     };
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         #[wrapper_impl(Deref)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL IMPL
+            @INTERNAL IMPL
             $($tt)*
         }
     };
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         #[wrapper_impl(DerefMut)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL IMPL
+            @INTERNAL IMPL
             $($tt)*
         }
     };
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         #[wrapper_impl(From)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL IMPL
+            @INTERNAL IMPL
             $($tt)*
         }
     };
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         #[wrapper_impl(Debug)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL IMPL
+            @INTERNAL IMPL
             $($tt)*
         }
     };
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         #[wrapper_impl(DebugName)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL IMPL
+            @INTERNAL IMPL
             $($tt)*
         }
     };
 
     // The actual implementation of the wrapper type: `pub Name<...>(...)`
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         $(#[$outer:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         $(#[$outer])*
         #[repr(transparent)]
@@ -272,7 +274,7 @@ macro_rules! wrapper {
 
     // The actual implementation of the wrapper type: `pub struct Name<...> { ... }`, with field initial value provided, make `const_from` const.
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         $(#[$outer:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -311,7 +313,7 @@ macro_rules! wrapper {
 
     // The actual implementation of the wrapper type with fields: `pub struct Name<...> { ... }`
     (
-        @INTERNEL IMPL
+        @INTERNAL IMPL
         $(#[$outer:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -338,145 +340,145 @@ macro_rules! wrapper {
 
     // Extract wrapper impl for `AsRef` trait.
     (
-        @INTERNEL WRAPPER_IMPL
+        @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(AsRef)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL_AS_REF
+            @INTERNAL WRAPPER_IMPL_AS_REF
             $($tt)*
         }
 
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL
+            @INTERNAL WRAPPER_IMPL
             $($tt)*
         }
     };
 
     // Extract wrapper impl for `AsMut` trait.
     (
-        @INTERNEL WRAPPER_IMPL
+        @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(AsMut)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL_AS_MUT
+            @INTERNAL WRAPPER_IMPL_AS_MUT
             $($tt)*
         }
 
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL
+            @INTERNAL WRAPPER_IMPL
             $($tt)*
         }
     };
 
     // Extract wrapper impl for `Borrow` trait.
     (
-        @INTERNEL WRAPPER_IMPL
+        @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(Borrow)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL_BORROW
+            @INTERNAL WRAPPER_IMPL_BORROW
             $($tt)*
         }
 
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL
+            @INTERNAL WRAPPER_IMPL
             $($tt)*
         }
     };
 
     // Extract wrapper impl for `Debug` trait.
     (
-        @INTERNEL WRAPPER_IMPL
+        @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(Debug)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL_DEBUG
+            @INTERNAL WRAPPER_IMPL_DEBUG
             $($tt)*
         }
 
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL
+            @INTERNAL WRAPPER_IMPL
             $($tt)*
         }
     };
 
     // Extract wrapper impl for `Debug` trait  printing its name only.
     (
-        @INTERNEL WRAPPER_IMPL
+        @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(DebugName)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL_DEBUG_NAME
+            @INTERNAL WRAPPER_IMPL_DEBUG_NAME
             $($tt)*
         }
 
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL
+            @INTERNAL WRAPPER_IMPL
             $($tt)*
         }
     };
 
     // Extract wrapper impl for `DerefMut` trait (and `Deref`).
     (
-        @INTERNEL WRAPPER_IMPL
+        @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(DerefMut)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL_DEREF_MUT
+            @INTERNAL WRAPPER_IMPL_DEREF_MUT
             $($tt)*
         }
 
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL
+            @INTERNAL WRAPPER_IMPL
             $($tt)*
         }
     };
 
     // Extract wrapper impl for `Deref` trait.
     (
-        @INTERNEL WRAPPER_IMPL
+        @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(Deref)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL_DEREF
+            @INTERNAL WRAPPER_IMPL_DEREF
             $($tt)*
         }
 
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL
+            @INTERNAL WRAPPER_IMPL
             $($tt)*
         }
     };
 
     // Extract wrapper impl for `From` trait.
     (
-        @INTERNEL WRAPPER_IMPL
+        @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(From)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL_FROM
+            @INTERNAL WRAPPER_IMPL_FROM
             $($tt)*
         }
 
         $crate::wrapper! {
-            @INTERNEL WRAPPER_IMPL
+            @INTERNAL WRAPPER_IMPL
             $($tt)*
         }
     };
 
     // ================ Impl `AsRef` trait for the wrapper type. ================
     (
-        @INTERNEL WRAPPER_IMPL_AS_REF
+        @INTERNAL WRAPPER_IMPL_AS_REF
         $(#[$meta:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
@@ -495,7 +497,7 @@ macro_rules! wrapper {
         }
     };
     (
-        @INTERNEL WRAPPER_IMPL_AS_REF
+        @INTERNAL WRAPPER_IMPL_AS_REF
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -527,9 +529,9 @@ macro_rules! wrapper {
 
     // ================ Impl `AsMut` trait for the wrapper type. ================
     (
-        @INTERNEL WRAPPER_IMPL_AS_MUT
+        @INTERNAL WRAPPER_IMPL_AS_MUT
         $(#[$meta:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
@@ -548,7 +550,7 @@ macro_rules! wrapper {
         }
     };
     (
-        @INTERNEL WRAPPER_IMPL_AS_MUT
+        @INTERNAL WRAPPER_IMPL_AS_MUT
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -580,9 +582,9 @@ macro_rules! wrapper {
 
     // ================ Impl `Borrow` trait for the wrapper type. ================
     (
-        @INTERNEL WRAPPER_IMPL_BORROW
+        @INTERNAL WRAPPER_IMPL_BORROW
         $(#[$meta:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
@@ -593,7 +595,7 @@ macro_rules! wrapper {
         }
     };
     (
-        @INTERNEL WRAPPER_IMPL_BORROW
+        @INTERNAL WRAPPER_IMPL_BORROW
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -616,9 +618,9 @@ macro_rules! wrapper {
 
     // ================ Impl `Debug` trait for the wrapper type. ================
     (
-        @INTERNEL WRAPPER_IMPL_DEBUG
+        @INTERNAL WRAPPER_IMPL_DEBUG
         $(#[$meta:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
@@ -632,7 +634,7 @@ macro_rules! wrapper {
         }
     };
     (
-        @INTERNEL WRAPPER_IMPL_DEBUG
+        @INTERNAL WRAPPER_IMPL_DEBUG
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -658,9 +660,9 @@ macro_rules! wrapper {
 
     // ================ Impl `DebugName` trait for the wrapper type. ================
     (
-        @INTERNEL WRAPPER_IMPL_DEBUG_NAME
+        @INTERNAL WRAPPER_IMPL_DEBUG_NAME
         $(#[$meta:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
@@ -671,7 +673,7 @@ macro_rules! wrapper {
         }
     };
     (
-        @INTERNEL WRAPPER_IMPL_DEBUG_NAME
+        @INTERNAL WRAPPER_IMPL_DEBUG_NAME
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -694,9 +696,9 @@ macro_rules! wrapper {
 
     // ================ Impl `DerefMut` traits for the wrapper type. ================
     (
-        @INTERNEL WRAPPER_IMPL_DEREF_MUT
+        @INTERNAL WRAPPER_IMPL_DEREF_MUT
         $(#[$meta:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
@@ -715,7 +717,7 @@ macro_rules! wrapper {
         }
     };
     (
-        @INTERNEL WRAPPER_IMPL_DEREF_MUT
+        @INTERNAL WRAPPER_IMPL_DEREF_MUT
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -746,9 +748,9 @@ macro_rules! wrapper {
 
     // ================ Impl `Deref` trait for the wrapper type. ================
     (
-        @INTERNEL WRAPPER_IMPL_DEREF
+        @INTERNAL WRAPPER_IMPL_DEREF
         $(#[$meta:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
@@ -761,7 +763,7 @@ macro_rules! wrapper {
         }
     };
     (
-        @INTERNEL WRAPPER_IMPL_DEREF
+        @INTERNAL WRAPPER_IMPL_DEREF
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -786,9 +788,9 @@ macro_rules! wrapper {
 
     // ================ Impl `From` trait for the wrapper type. ================
     (
-        @INTERNEL WRAPPER_IMPL_FROM
+        @INTERNAL WRAPPER_IMPL_FROM
         $(#[$meta:meta])*
-        $vis:vis $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
         ($inner_vis:vis $inner_ty:ty)
         $($tt:tt)*
     ) => {
@@ -808,7 +810,7 @@ macro_rules! wrapper {
         }
     };
     (
-        @INTERNEL WRAPPER_IMPL_FROM
+        @INTERNAL WRAPPER_IMPL_FROM
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
@@ -836,23 +838,23 @@ macro_rules! wrapper {
             }
         }
     };
-    (@INTERNEL WRAPPER_IMPL_FROM $($tt:tt)*) => {};
+    (@INTERNAL WRAPPER_IMPL_FROM $($tt:tt)*) => {};
     // ================ Impl `From` trait for the wrapper type. ================
 
     // No other wrapper_impl meta
-    (@INTERNEL WRAPPER_IMPL $($tt:tt)*) => {};
+    (@INTERNAL WRAPPER_IMPL $($tt:tt)*) => {};
 
     // Catch-all for invalid usage of the macro.
-    (@INTERNEL $($tt:tt)*) => {
+    (@INTERNAL $($tt:tt)*) => {
         compile_error!(
-            "Invalid usage of `wrapper!` macro. @INTERNEL \
+            "Invalid usage of `wrapper!` macro. @INTERNAL \
             Please refer to the documentation for the correct syntax."
         );
     };
 
     // Core macro for the wrapper type.
     ($($tt:tt)*) => {
-        $crate::wrapper!(@INTERNEL IMPL $($tt)*);
-        $crate::wrapper!(@INTERNEL WRAPPER_IMPL $($tt)*);
+        $crate::wrapper!(@INTERNAL IMPL $($tt)*);
+        $crate::wrapper!(@INTERNAL WRAPPER_IMPL $($tt)*);
     };
 }

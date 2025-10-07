@@ -5,8 +5,7 @@
 
 use wrapper_lite::*;
 
-#[rustfmt::skip]
-wrapper! {
+wrapper!(
     #[wrapper_impl(AsMut)]
     #[wrapper_impl(AsRef)]
     #[wrapper_impl(Borrow)]
@@ -16,13 +15,13 @@ wrapper! {
     #[derive(Clone, Default)]
     #[derive(PartialEq)] // Multiple derive attributes
     /// Test Docs
-    pub TestWrapperAllMixed(String); // trailing semicolon
-}
+    pub struct TestWrapperAllMixed(String);
+);
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(AsRef)]
-    pub TestWrapperImplAsRef(String)
-}
+    pub struct TestWrapperImplAsRef(String);
+);
 
 fn assert_impls_TestWrapperImplAsRef() {
     _assert_impl_as_ref::<TestWrapperImplAsRef, _>();
@@ -35,123 +34,123 @@ fn assert_size_eq() {
     assert_eq!(size_of::<TestWrapperImplAsRef>(), size_of::<String>());
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(AsRef)]
     #[derive(Debug)]
-    pub TestWrapperImplAsRefMixed(String)
-}
+    pub struct TestWrapperImplAsRefMixed(String);
+);
 
 fn assert_impls_TestWrapperImplAsRefMixed() {
     _assert_impl_debug::<TestWrapperImplAsRefMixed>();
     _assert_impl_as_ref::<TestWrapperImplAsRefMixed, _>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(Borrow)]
-    pub TestWrapperImplBorrow(String)
-}
+    pub struct TestWrapperImplBorrow(String);
+);
 
 fn assert_impls_TestWrapperImplBorrow() {
     _assert_impl_borrow::<TestWrapperImplBorrow, String>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(Borrow)]
     #[derive(Debug)]
-    pub TestWrapperImplBorrowMixed(String)
-}
+    pub struct TestWrapperImplBorrowMixed(String);
+);
 
 fn assert_impls_TestWrapperImplBorrowMixed() {
     _assert_impl_debug::<TestWrapperImplBorrowMixed>();
     _assert_impl_borrow::<TestWrapperImplBorrowMixed, String>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(Debug)]
-    pub TestWrapperImplDebug(String)
-}
+    pub struct TestWrapperImplDebug(String);
+);
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(DebugName)]
-    pub TestWrapperImplDebugName(String)
-}
+    pub struct TestWrapperImplDebugName(String);
+);
 
 fn assert_impls_TestWrapperImplDebug() {
     _assert_impl_debug::<TestWrapperImplDebug>();
     _assert_impl_debug::<TestWrapperImplDebugName>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(Debug)]
     #[derive(Default)]
-    pub TestWrapperImplDebugMixed(String)
-}
+    pub struct TestWrapperImplDebugMixed(String);
+);
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(DebugName)]
     #[derive(Default)]
-    pub TestWrapperImplDebugNameMixed(String)
-}
+    pub struct TestWrapperImplDebugNameMixed(String);
+);
 
 fn assert_impls_TestWrapperImplDebugNameMixed() {
     _assert_impl_debug::<TestWrapperImplDebugMixed>();
     _assert_impl_debug::<TestWrapperImplDebugNameMixed>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(Deref)]
-    pub TestWrapperImplDeref(String)
-}
+    pub struct TestWrapperImplDeref(String);
+);
 
 fn assert_impls_TestWrapperImplDeref() {
     _assert_impl_deref::<TestWrapperImplDeref, _>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(Deref)]
     #[derive(Debug)]
-    pub TestWrapperImplDerefMixed(String)
-}
+    pub struct TestWrapperImplDerefMixed(String);
+);
 
 fn assert_impls_TestWrapperImplDerefMixed() {
     _assert_impl_debug::<TestWrapperImplDerefMixed>();
     _assert_impl_deref::<TestWrapperImplDerefMixed, _>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(DerefMut)]
-    pub TestWrapperImplDerefMut(String)
-}
+    pub struct TestWrapperImplDerefMut(String);
+);
 
 fn assert_impls_TestWrapperImplDerefMut() {
     _assert_impl_deref_mut::<TestWrapperImplDerefMut, _>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(DerefMut)]
     #[derive(Debug)]
-    pub TestWrapperImplDerefMutMixed(String)
-}
+    pub struct TestWrapperImplDerefMutMixed(String);
+);
 
 fn assert_impls_TestWrapperImplDerefMutMixed() {
     _assert_impl_debug::<TestWrapperImplDerefMutMixed>();
     _assert_impl_deref_mut::<TestWrapperImplDerefMutMixed, _>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(From)]
-    pub TestWrapperImplFrom(String)
-}
+    pub struct TestWrapperImplFrom(String);
+);
 
 fn assert_impls_TestWrapperImplFrom() {
     _assert_impl_from::<TestWrapperImplFrom, String>();
 }
 
-wrapper! {
+wrapper!(
     #[wrapper_impl(From)]
     #[derive(Debug)]
-    pub TestWrapperImplFromMixed(String)
-}
+    pub struct TestWrapperImplFromMixed(String);
+);
 
 fn assert_impls_TestWrapperImplFromMixed() {
     _assert_impl_debug::<TestWrapperImplFromMixed>();
@@ -159,12 +158,12 @@ fn assert_impls_TestWrapperImplFromMixed() {
 }
 
 // Test multiple
-wrapper! {
+wrapper!(
     #[wrapper_impl(Deref)]
     #[wrapper_impl(From)]
     #[derive(Debug)]
-    pub TestWrapperImplFromDeref(String)
-}
+    pub struct TestWrapperImplFromDeref(String);
+);
 
 fn assert_impls_TestWrapperImplFromDeref() {
     _assert_impl_debug::<TestWrapperImplFromDeref>();
@@ -173,12 +172,12 @@ fn assert_impls_TestWrapperImplFromDeref() {
 }
 
 // Test multiple with lifetimes
-wrapper! {
+wrapper!(
     #[wrapper_impl(Deref)]
     #[wrapper_impl(From)]
     #[derive(Debug)]
-    pub TestWrapperImplFromDerefMixed<'a, P>(pub(crate) &'a P)
-}
+    pub struct TestWrapperImplFromDerefMixed<'a, P>(pub(crate) &'a P)
+);
 
 fn assert_impls_TestWrapperImplFromDerefMixed<P: core::fmt::Debug>() {
     _assert_impl_debug::<TestWrapperImplFromDerefMixed<'_, P>>();
