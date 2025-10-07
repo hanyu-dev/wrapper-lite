@@ -1,5 +1,4 @@
-//! Helper macro for creating a wrapper over any type (new-type idiom).
-
+#![doc = include_str!("../README.md")]
 #![no_std]
 
 #[macro_export]
@@ -186,7 +185,7 @@ macro_rules! general_wrapper {
 ///   corresponding `Borrow` and `Deref` traits, so the following two examples
 ///   will fail to compile:
 ///
-///   ```compile_fail
+///   ```rust,compile_fail
 ///   wrapper_lite::wrapper!(
 ///       #[wrapper_impl(Borrow)]
 ///       #[wrapper_impl(BorrowMut)]
@@ -194,7 +193,7 @@ macro_rules! general_wrapper {
 ///   );
 ///   ```
 ///
-///   ```compile_fail
+///   ```rust,compile_fail
 ///   wrapper_lite::wrapper!(
 ///       #[wrapper_impl(Deref)]
 ///       #[wrapper_impl(DerefMut)]
