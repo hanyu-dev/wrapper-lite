@@ -28,10 +28,11 @@ wrapper_lite::wrapper!(
 
 Now we can format the macro content with `cargo fmt`!
 
-## MSRV
+## License
 
-1.56.0
+Licensed under either of:
 
-## LICENSE
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT License ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
-MIT
+at your option.

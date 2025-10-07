@@ -9,7 +9,7 @@ authors = ["Hantong Chen <cxwdyx620@gmail.com>"]
 categories = ["development-tools"]
 description = "Helper macro for creating a wrapper over any type (new-type idiom)."
 keywords = ["macro", "wrapper"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/hanyu-dev/wrapper-lite"
 
