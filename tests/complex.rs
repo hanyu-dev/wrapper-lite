@@ -80,7 +80,7 @@ wrapper! {
     #[wrapper_impl(Debug)]
     // #[wrapper_impl(Deref)]
     #[wrapper_impl(DerefMut)]
-    #[wrapper_impl(From)]
+    // #[wrapper_impl(From)]
     #[repr(transparent)]
     #[derive(Clone)]
     pub struct TestWrapperComplex<'a, 'b: 'a, P: Sized + Clone> {

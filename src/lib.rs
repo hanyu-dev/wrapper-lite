@@ -1244,7 +1244,26 @@ macro_rules! wrapper {
             }
         }
     };
-    (@INTERNAL WRAPPER_IMPL_FROM $($tt:tt)*) => {};
+    (
+        @INTERNAL WRAPPER_IMPL_FROM
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty
+            )*
+            $(,)?
+        }
+    ) => {
+        compile_error!(
+            "Invalid usage of `wrapper!` macro, cannot implement \
+            `From` trait for wrapper types with multiple fields\
+            but no default values given."
+        );
+    };
     // ================ Impl `From` trait for the wrapper type. ================
 
     // No other wrapper_impl meta
