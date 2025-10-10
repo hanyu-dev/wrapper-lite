@@ -99,9 +99,9 @@ macro_rules! general_wrapper {
 ///     #[wrapper_impl(AsRef)]
 ///     // #[wrapper_impl(Borrow)]
 ///     #[wrapper_impl(BorrowMut)]
-///     //     #[wrapper_impl(Deref)]
+///     // #[wrapper_impl(Deref)]
 ///     #[wrapper_impl(DerefMut)]
-///     #[wrapper_impl(From)]
+///     // #[wrapper_impl(From)]
 ///     #[wrapper_impl(Debug)]
 ///     #[derive(Clone, Copy, PartialEq, Eq)]
 ///     #[repr(transparent)]
@@ -111,15 +111,33 @@ macro_rules! general_wrapper {
 ///         _b: ::core::marker::PhantomData<&'b ()>,
 ///     }
 /// );
+/// 
+/// wrapper_lite::wrapper!(
+///     #[wrapper_impl(AsMut)]
+///     #[wrapper_impl(AsRef)]
+///     // #[wrapper_impl(Borrow)]
+///     #[wrapper_impl(BorrowMut)]
+///     // #[wrapper_impl(Deref)]
+///     #[wrapper_impl(DerefMut)]
+///     #[wrapper_impl(From)]
+///     #[wrapper_impl(Debug)]
+///     #[derive(Clone, Copy, PartialEq, Eq)]
+///     #[repr(transparent)]
+///     pub struct ExampleWrapperComplexWithDefault<'a, 'b, P> {
+///         inner: P,
+///         _a: ::core::marker::PhantomData<&'a ()> = ::core::marker::PhantomData,
+///         _b: ::core::marker::PhantomData<&'b ()> = ::core::marker::PhantomData,
+///     }
+/// );
 /// ```
 ///
 /// There're some limitations:
 ///
 /// - The inner field must be named as `inner`.
-/// - When no default value is specified, the wrapper type will not implement
-///   the `From` trait. Will also not generate the `const_from` method.
-/// - Does not automatically apply `repr(transparent)` attribute, since the
-///   macro doesn't know if other fields were zero-sized types (ZST).
+/// - When there's no default value specified, we cannot implement the `From`
+///   trait for the wrapper type.
+/// - The macro does not know if other fields were zero-sized types (ZST), hence
+///   we will not automatically apply `repr(transparent)` attribute.
 ///
 /// ## Special attributes
 ///
@@ -327,7 +345,8 @@ macro_rules! wrapper {
         }
     };
 
-    // The actual implementation of the wrapper type: `pub struct Name<...> { ... }`, with field initial value provided, make `const_from` const.
+    // The actual implementation of the wrapper type: `pub struct Name<...> { ... }`
+    // with field initial value provided, make `const_from` const.
     (
         @INTERNAL IMPL
         $(#[$outer:meta])*
@@ -393,6 +412,8 @@ macro_rules! wrapper {
         }
     };
 
+    // === Process all `wrapper_impl` attributes, and generate impls. ===
+
     // Extract wrapper impl for `AsRef` trait.
     (
         @INTERNAL WRAPPER_IMPL
@@ -426,6 +447,8 @@ macro_rules! wrapper {
             $($tt)*
         }
     };
+
+    // Extract wrapper impl for `AsMut` trait, const version.
     (
         @INTERNAL WRAPPER_IMPL
         #[wrapper_impl(ConstAsMut $(<$target:ty>)? )]
@@ -515,6 +538,23 @@ macro_rules! wrapper {
         }
     };
 
+    // Extract wrapper impl for `Deref` trait.
+    (
+        @INTERNAL WRAPPER_IMPL
+        #[wrapper_impl(Deref $(<$target:ty>)? )]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL_DEREF $(<$target>)?
+            $($tt)*
+        }
+
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL
+            $($tt)*
+        }
+    };
+
     // Extract wrapper impl for `DerefMut` trait (and `Deref`).
     (
         @INTERNAL WRAPPER_IMPL
@@ -528,23 +568,6 @@ macro_rules! wrapper {
 
         $crate::wrapper! {
             @INTERNAL WRAPPER_IMPL_DEREF_MUT $(<$target>)?
-            $($tt)*
-        }
-
-        $crate::wrapper! {
-            @INTERNAL WRAPPER_IMPL
-            $($tt)*
-        }
-    };
-
-    // Extract wrapper impl for `Deref` trait.
-    (
-        @INTERNAL WRAPPER_IMPL
-        #[wrapper_impl(Deref $(<$target:ty>)? )]
-        $($tt:tt)*
-    ) => {
-        $crate::wrapper! {
-            @INTERNAL WRAPPER_IMPL_DEREF $(<$target>)?
             $($tt)*
         }
 
@@ -575,9 +598,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_AS_REF <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$target> for $name$(<$($lt),+>)? {
             fn as_ref(&self) -> &$target {
@@ -608,9 +629,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_AS_REF
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_ref(&self) -> &$inner_ty {
@@ -661,9 +680,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_AS_MUT <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$target> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $target {
@@ -695,9 +712,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_AS_MUT
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $inner_ty {
@@ -742,14 +757,10 @@ macro_rules! wrapper {
             }
         }
     };
-
-    // Const version
     (
         @INTERNAL WRAPPER_IMPL_CONST_AS_MUT <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$target> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $target {
@@ -781,9 +792,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_CONST_AS_MUT
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $inner_ty {
@@ -834,9 +843,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_BORROW <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$target> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$target {
@@ -867,9 +874,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_BORROW
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$inner_ty {
@@ -903,9 +908,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_BORROW_MUT <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::BorrowMut<$target> for $name$(<$($lt),+>)? {
             fn borrow_mut(&mut self) -> &mut $target {
@@ -936,9 +939,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_BORROW_MUT
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::BorrowMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow_mut(&mut self) -> &mut $inner_ty {
@@ -972,9 +973,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEBUG
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt),+>)?
         where
@@ -1014,9 +1013,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEBUG_NAME
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt),+>)? {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
@@ -1046,82 +1043,11 @@ macro_rules! wrapper {
     };
     // ================ Impl `DebugName` trait for the wrapper type. ================
 
-    // ================ Impl `DerefMut` traits for the wrapper type. ================
-    (
-        @INTERNAL WRAPPER_IMPL_DEREF_MUT <$target:ty>
-        $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
-    ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.inner
-            }
-        }
-    };
-    (
-        @INTERNAL WRAPPER_IMPL_DEREF_MUT <$target:ty>
-        $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
-            $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
-            $(
-                ,
-                $(#[$field_meta:meta])*
-                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
-            )*
-            $(,)?
-        }
-    ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.inner
-            }
-        }
-    };
-    (
-        @INTERNAL WRAPPER_IMPL_DEREF_MUT
-        $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
-    ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.inner
-            }
-        }
-    };
-    (
-        @INTERNAL WRAPPER_IMPL_DEREF_MUT
-        $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
-            $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
-            $(
-                ,
-                $(#[$field_meta:meta])*
-                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
-            )*
-            $(,)?
-        }
-    ) => {
-        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.inner
-            }
-        }
-    };
-    // ================ Impl `DerefMut` traits for the wrapper type. ================
-
     // ================ Impl `Deref` trait for the wrapper type. ================
     (
         @INTERNAL WRAPPER_IMPL_DEREF <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
             type Target = $target;
@@ -1156,9 +1082,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEREF
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
             type Target = $inner_ty;
@@ -1191,14 +1115,77 @@ macro_rules! wrapper {
         }
     };
     // ================ Impl `Deref` trait for the wrapper type. ================
+
+    // ================ Impl `DerefMut` traits for the wrapper type. ================
+    (
+        @INTERNAL WRAPPER_IMPL_DEREF_MUT <$target:ty>
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.inner
+            }
+        }
+    };
+    (
+        @INTERNAL WRAPPER_IMPL_DEREF_MUT <$target:ty>
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
+            )*
+            $(,)?
+        }
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.inner
+            }
+        }
+    };
+    (
+        @INTERNAL WRAPPER_IMPL_DEREF_MUT
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.inner
+            }
+        }
+    };
+    (
+        @INTERNAL WRAPPER_IMPL_DEREF_MUT
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
+            )*
+            $(,)?
+        }
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.inner
+            }
+        }
+    };
+    // ================ Impl `DerefMut` traits for the wrapper type. ================
 
     // ================ Impl `From` trait for the wrapper type. ================
     (
         @INTERNAL WRAPPER_IMPL_FROM
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? $(;)?
-        ($inner_vis:vis $inner_ty:ty)
-        $($tt:tt)*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::From<$inner_ty> for $name$(<$($lt),+>)? {
             fn from(inner: $inner_ty) -> Self {
