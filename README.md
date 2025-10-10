@@ -8,6 +8,36 @@ The new type idiom gives compile time guarantees that the right type of value is
 
 This crate provides a simple macro for you to create a wrapper over _any_ type.
 
+## Migrate from v0.2.X
+
+1. The macro now only accepts valid Rust struct syntax.
+
+   ```rust
+   wrapper_lite::wrapper!(
+       pub struct TestWrapper1(u8); // <-- note the semicolon, now it's required
+   );
+   ```
+
+   ```rust
+   wrapper_lite::wrapper!(
+       pub struct TestWrapper2 {
+           inner: u8,
+       }
+   );
+   ```
+1. When there's no default value specified, we cannot implement the `From` trait for the wrapper type, and now it's a hard error.
+
+   ```rust,compile_fail
+   wrapper_lite::wrapper!(
+       #[wrapper_impl(From)]
+       pub struct TestWrapperComplex<'a, 'b> {
+           inner: String,
+           _a: ::core::marker::PhantomData<&'a ()>,
+           _b: ::core::marker::PhantomData<&'b ()>,
+       }
+   );
+   ```
+
 ## Migrate from v0.1.X
 
 To make `cargo-fmt` happy, starting from v0.2.0, the following usage which is not a valid Rust struct syntax is no longer accepted.

@@ -111,7 +111,7 @@ macro_rules! general_wrapper {
 ///         _b: ::core::marker::PhantomData<&'b ()>,
 ///     }
 /// );
-/// 
+///
 /// wrapper_lite::wrapper!(
 ///     #[wrapper_impl(AsMut)]
 ///     #[wrapper_impl(AsRef)]
@@ -139,7 +139,7 @@ macro_rules! general_wrapper {
 /// - The macro does not know if other fields were zero-sized types (ZST), hence
 ///   we will not automatically apply `repr(transparent)` attribute.
 ///
-/// ## Special attributes
+/// ## Special usages
 ///
 /// ### `Debug` and `DebugName`
 ///
@@ -194,6 +194,24 @@ macro_rules! general_wrapper {
 /// const fn const_fn_example<P>(w: &mut ExampleWrapper<P>) -> &mut P {
 ///     w.as_inner_mut()
 /// }
+/// ```
+///
+/// ### `AsRef<T>`, `AsMut<T>`, `Borrow<T>`, `BorrowMut<T>`, `Deref<T>`, `DerefMut<T>`
+///
+/// These attributes allow you to specify a target type `T` for the respective
+/// traits (experimental). This is done by auto-dereferencing the inner type to
+/// get a reference to `T`.
+///
+/// ```rust
+/// wrapper_lite::wrapper!(
+///     #[wrapper_impl(AsRef<[u8]>)]
+///     #[wrapper_impl(AsMut<[u8]>)]
+///     // #[wrapper_impl(Borrow<[u8]>)]
+///     #[wrapper_impl(BorrowMut<[u8]>)]
+///     // #[wrapper_impl(Deref<[u8]>)]
+///     #[wrapper_impl(DerefMut<[u8]>)]
+///     pub struct ExampleWrapper(pub(crate) Vec<u8>);
+/// );
 /// ```
 ///
 /// ## Notes
