@@ -325,7 +325,7 @@ macro_rules! wrapper {
     (
         @INTERNAL IMPL
         $(#[$outer:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         $(#[$outer])*
         #[repr(transparent)]
@@ -598,7 +598,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_AS_REF <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$target> for $name$(<$($lt),+>)? {
             fn as_ref(&self) -> &$target {
@@ -629,7 +629,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_AS_REF
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_ref(&self) -> &$inner_ty {
@@ -680,7 +680,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_AS_MUT <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$target> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $target {
@@ -712,7 +712,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_AS_MUT
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $inner_ty {
@@ -760,7 +760,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_CONST_AS_MUT <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$target> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $target {
@@ -792,7 +792,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_CONST_AS_MUT
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_mut(&mut self) -> &mut $inner_ty {
@@ -843,7 +843,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_BORROW <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$target> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$target {
@@ -874,7 +874,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_BORROW
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$inner_ty {
@@ -908,7 +908,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_BORROW_MUT <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::BorrowMut<$target> for $name$(<$($lt),+>)? {
             fn borrow_mut(&mut self) -> &mut $target {
@@ -939,7 +939,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_BORROW_MUT
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::BorrowMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow_mut(&mut self) -> &mut $inner_ty {
@@ -973,7 +973,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEBUG
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt),+>)?
         where
@@ -1013,7 +1013,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEBUG_NAME
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Debug for $name$(<$($lt),+>)? {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
@@ -1047,7 +1047,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEREF <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
             type Target = $target;
@@ -1082,7 +1082,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEREF
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::Deref for $name$(<$($lt),+>)? {
             type Target = $inner_ty;
@@ -1120,7 +1120,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEREF_MUT <$target:ty>
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
             fn deref_mut(&mut self) -> &mut Self::Target {
@@ -1151,7 +1151,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_DEREF_MUT
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
             fn deref_mut(&mut self) -> &mut Self::Target {
@@ -1185,7 +1185,7 @@ macro_rules! wrapper {
     (
         @INTERNAL WRAPPER_IMPL_FROM
         $(#[$meta:meta])*
-        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty) $(;)?
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::From<$inner_ty> for $name$(<$($lt),+>)? {
             fn from(inner: $inner_ty) -> Self {

@@ -205,7 +205,7 @@ wrapper!(
     #[wrapper_impl(Deref)]
     #[wrapper_impl(From)]
     #[derive(Debug)]
-    pub struct TestWrapperImplFromDerefMixed<'a, P>(pub(crate) &'a P)
+    pub struct TestWrapperImplFromDerefMixed<'a, P>(pub(crate) &'a P);
 );
 
 fn assert_impls_TestWrapperImplFromDerefMixed<P: core::fmt::Debug>() {
