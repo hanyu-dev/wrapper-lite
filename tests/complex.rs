@@ -6,6 +6,86 @@
 use wrapper_lite::*;
 
 wrapper! {
+    #[repr(align(cache))]
+    pub struct TestWrapperCachePadded<'a, 'b> {
+        inner: String,
+        _a: ::core::marker::PhantomData<&'a ()>,
+        _b: ::core::marker::PhantomData<&'b ()>
+    }
+}
+
+wrapper! {
+    #[repr(align(cache))]
+    pub struct TestWrapperCachePaddedWithDefault<'a, 'b> {
+        inner: String,
+        _a: ::core::marker::PhantomData<&'a ()> = ::core::marker::PhantomData,
+        _b: ::core::marker::PhantomData<&'b ()> = ::core::marker::PhantomData
+    }
+}
+
+#[test]
+fn test_align_of_TestWrapperCachePadded() {
+    use core::mem::align_of;
+
+    #[cfg(any(
+        target_arch = "x86_64",
+        target_arch = "aarch64",
+        target_arch = "arm64ec",
+        target_arch = "powerpc64",
+    ))]
+    {
+        assert_eq!(align_of::<TestWrapperCachePadded>(), 128);
+        assert_eq!(align_of::<TestWrapperCachePaddedWithDefault>(), 128);
+    }
+
+    #[cfg(any(
+        target_arch = "arm",
+        target_arch = "mips",
+        target_arch = "mips32r6",
+        target_arch = "mips64",
+        target_arch = "mips64r6",
+        target_arch = "sparc",
+        target_arch = "hexagon",
+    ))]
+    {
+        assert_eq!(align_of::<TestWrapperCachePadded>(), 32);
+        assert_eq!(align_of::<TestWrapperCachePaddedWithDefault>(), 32);
+    }
+
+    #[cfg(target_arch = "m68k")]
+    {
+        assert_eq!(align_of::<TestWrapperCachePadded>(), 16);
+        assert_eq!(align_of::<TestWrapperCachePaddedWithDefault>(), 16);
+    }
+
+    #[cfg(target_arch = "s390x")]
+    {
+        assert_eq!(align_of::<TestWrapperCachePadded>(), 256);
+        assert_eq!(align_of::<TestWrapperCachePaddedWithDefault>(), 256);
+    }
+
+    #[cfg(not(any(
+        target_arch = "x86_64",
+        target_arch = "aarch64",
+        target_arch = "arm64ec",
+        target_arch = "powerpc64",
+        target_arch = "arm",
+        target_arch = "mips",
+        target_arch = "mips32r6",
+        target_arch = "mips64",
+        target_arch = "mips64r6",
+        target_arch = "sparc",
+        target_arch = "hexagon",
+        target_arch = "m68k",
+        target_arch = "s390x",
+    )))]
+    {
+        assert_eq!(align_of::<TestWrapperCachePadded>(), 64);
+        assert_eq!(align_of::<TestWrapperCachePaddedWithDefault>(), 64);
+    }
+}
+
+wrapper! {
     pub struct TestWrapperEmptyWithTailing<'a, 'b> {
         inner: String,
         _a: ::core::marker::PhantomData<&'a ()>,

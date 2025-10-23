@@ -214,6 +214,29 @@ macro_rules! general_wrapper {
 /// );
 /// ```
 ///
+/// ### `repr(align(cache))`
+///
+/// You can use `#[repr(align(cache))]` to pad and align the wrapper type to the
+/// cache line size. This is useful for performance optimization in certain
+/// scenarios.
+///
+/// ```
+/// wrapper_lite::wrapper!(
+///     #[wrapper_impl(From)]
+///     #[repr(align(cache))]
+///     /// Example doc
+///     pub struct ExampleWrapperCachePadded(u64);
+/// );
+/// #[cfg(target_arch = "x86_64")]
+/// assert_eq!(core::mem::align_of::<ExampleWrapperCachePadded>(), 128);
+/// ```
+///
+/// Credits: <https://docs.rs/crossbeam/latest/crossbeam/utils/struct.CachePadded.html>.
+///
+/// Notes that `repr(align(cache))` must be placed after other
+/// `#[wrapper_impl(...)]` attributes and before any other attributes, including
+/// docs.
+///
 /// ## Notes
 ///
 /// - The `wrapper_impl` attribute must be on top of any other attributes.
@@ -342,6 +365,114 @@ macro_rules! wrapper {
     // The actual implementation of the wrapper type: `pub Name<...>(...)`
     (
         @INTERNAL IMPL
+        #[repr(align(cache))]
+        $(#[$outer:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
+    ) => {
+        // Starting from Intel's Sandy Bridge, spatial prefetcher is now pulling pairs of 64-byte cache
+        // lines at a time, so we have to align to 128 bytes rather than 64.
+        //
+        // Sources:
+        // - https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf
+        // - https://github.com/facebook/folly/blob/1b5288e6eea6df074758f877c849b6e73bbb9fbb/folly/lang/Align.h#L107
+        //
+        // aarch64/arm64ec's big.LITTLE architecture has asymmetric cores and "big" cores have 128-byte cache line size.
+        //
+        // Sources:
+        // - https://www.mono-project.com/news/2016/09/12/arm64-icache/
+        //
+        // powerpc64 has 128-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_ppc64x.go#L9
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/powerpc/include/asm/cache.h#L26
+        #[cfg_attr(
+            any(
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+                target_arch = "arm64ec",
+                target_arch = "powerpc64",
+            ),
+            repr(align(128))
+        )]
+        // arm, mips, mips64, sparc, and hexagon have 32-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_arm.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mips.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mipsle.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mips64x.go#L9
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/sparc/include/asm/cache.h#L17
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/hexagon/include/asm/cache.h#L12
+        #[cfg_attr(
+            any(
+                target_arch = "arm",
+                target_arch = "mips",
+                target_arch = "mips32r6",
+                target_arch = "mips64",
+                target_arch = "mips64r6",
+                target_arch = "sparc",
+                target_arch = "hexagon",
+            ),
+            repr(align(32))
+        )]
+        // m68k has 16-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/m68k/include/asm/cache.h#L9
+        #[cfg_attr(target_arch = "m68k", repr(align(16)))]
+        // s390x has 256-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_s390x.go#L7
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/s390/include/asm/cache.h#L13
+        #[cfg_attr(target_arch = "s390x", repr(align(256)))]
+        // x86, wasm, riscv, and sparc64 have 64-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/dda2991c2ea0c5914714469c4defc2562a907230/src/internal/cpu/cpu_x86.go#L9
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_wasm.go#L7
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/riscv/include/asm/cache.h#L10
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/sparc/include/asm/cache.h#L19
+        //
+        // All others are assumed to have 64-byte cache line size.
+        #[cfg_attr(
+            not(any(
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+                target_arch = "arm64ec",
+                target_arch = "powerpc64",
+                target_arch = "arm",
+                target_arch = "mips",
+                target_arch = "mips32r6",
+                target_arch = "mips64",
+                target_arch = "mips64r6",
+                target_arch = "sparc",
+                target_arch = "hexagon",
+                target_arch = "m68k",
+                target_arch = "s390x",
+            )),
+            repr(align(64))
+        )]
+        $(#[$outer])*
+        $vis struct $name$(<$($lt),+>)? {
+            /// Inner value
+            $inner_vis inner: $inner_ty,
+        }
+
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
+            #[inline(always)]
+            #[doc = concat!("Creates a new instance of [`", stringify!($name), "`]")]
+            $inner_vis const fn const_from(inner: $inner_ty) -> Self {
+                Self {
+                    inner,
+                }
+            }
+        }
+    };
+
+    (
+        @INTERNAL IMPL
         $(#[$outer:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
     ) => {
@@ -365,6 +496,130 @@ macro_rules! wrapper {
 
     // The actual implementation of the wrapper type: `pub struct Name<...> { ... }`
     // with field initial value provided, make `const_from` const.
+    (
+        @INTERNAL IMPL
+        #[repr(align(cache))]
+        $(#[$outer:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty = $field_default: expr
+            )*
+            $(,)?
+        }
+    ) => {
+        // Starting from Intel's Sandy Bridge, spatial prefetcher is now pulling pairs of 64-byte cache
+        // lines at a time, so we have to align to 128 bytes rather than 64.
+        //
+        // Sources:
+        // - https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf
+        // - https://github.com/facebook/folly/blob/1b5288e6eea6df074758f877c849b6e73bbb9fbb/folly/lang/Align.h#L107
+        //
+        // aarch64/arm64ec's big.LITTLE architecture has asymmetric cores and "big" cores have 128-byte cache line size.
+        //
+        // Sources:
+        // - https://www.mono-project.com/news/2016/09/12/arm64-icache/
+        //
+        // powerpc64 has 128-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_ppc64x.go#L9
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/powerpc/include/asm/cache.h#L26
+        #[cfg_attr(
+            any(
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+                target_arch = "arm64ec",
+                target_arch = "powerpc64",
+            ),
+            repr(align(128))
+        )]
+        // arm, mips, mips64, sparc, and hexagon have 32-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_arm.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mips.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mipsle.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mips64x.go#L9
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/sparc/include/asm/cache.h#L17
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/hexagon/include/asm/cache.h#L12
+        #[cfg_attr(
+            any(
+                target_arch = "arm",
+                target_arch = "mips",
+                target_arch = "mips32r6",
+                target_arch = "mips64",
+                target_arch = "mips64r6",
+                target_arch = "sparc",
+                target_arch = "hexagon",
+            ),
+            repr(align(32))
+        )]
+        // m68k has 16-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/m68k/include/asm/cache.h#L9
+        #[cfg_attr(target_arch = "m68k", repr(align(16)))]
+        // s390x has 256-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_s390x.go#L7
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/s390/include/asm/cache.h#L13
+        #[cfg_attr(target_arch = "s390x", repr(align(256)))]
+        // x86, wasm, riscv, and sparc64 have 64-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/dda2991c2ea0c5914714469c4defc2562a907230/src/internal/cpu/cpu_x86.go#L9
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_wasm.go#L7
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/riscv/include/asm/cache.h#L10
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/sparc/include/asm/cache.h#L19
+        //
+        // All others are assumed to have 64-byte cache line size.
+        #[cfg_attr(
+            not(any(
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+                target_arch = "arm64ec",
+                target_arch = "powerpc64",
+                target_arch = "arm",
+                target_arch = "mips",
+                target_arch = "mips32r6",
+                target_arch = "mips64",
+                target_arch = "mips64r6",
+                target_arch = "sparc",
+                target_arch = "hexagon",
+                target_arch = "m68k",
+                target_arch = "s390x",
+            )),
+            repr(align(64))
+        )]
+        $(#[$outer])*
+        $vis struct $name$(<$($lt),+>)? {
+            $(#[$field_inner_meta])*
+            $inner_vis inner: $inner_ty,
+            $(
+                $(#[$field_meta])*
+                $field_vis $field: $field_ty
+            ),*
+        }
+
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
+            #[inline(always)]
+            #[doc = concat!("Creates a new instance of [`", stringify!($name), "`]")]
+            $inner_vis const fn const_from(inner: $inner_ty) -> Self {
+                Self {
+                    inner,
+                    $(
+                        $field: $field_default,
+                    )*
+                }
+            }
+        }
+    };
+
     (
         @INTERNAL IMPL
         $(#[$outer:meta])*
@@ -404,6 +659,118 @@ macro_rules! wrapper {
     };
 
     // The actual implementation of the wrapper type with fields: `pub struct Name<...> { ... }`
+    (
+        @INTERNAL IMPL
+        #[repr(align(cache))]
+        $(#[$outer:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis inner: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty
+            )*
+            $(,)?
+        }
+    ) => {
+        // Starting from Intel's Sandy Bridge, spatial prefetcher is now pulling pairs of 64-byte cache
+        // lines at a time, so we have to align to 128 bytes rather than 64.
+        //
+        // Sources:
+        // - https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf
+        // - https://github.com/facebook/folly/blob/1b5288e6eea6df074758f877c849b6e73bbb9fbb/folly/lang/Align.h#L107
+        //
+        // aarch64/arm64ec's big.LITTLE architecture has asymmetric cores and "big" cores have 128-byte cache line size.
+        //
+        // Sources:
+        // - https://www.mono-project.com/news/2016/09/12/arm64-icache/
+        //
+        // powerpc64 has 128-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_ppc64x.go#L9
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/powerpc/include/asm/cache.h#L26
+        #[cfg_attr(
+            any(
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+                target_arch = "arm64ec",
+                target_arch = "powerpc64",
+            ),
+            repr(align(128))
+        )]
+        // arm, mips, mips64, sparc, and hexagon have 32-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_arm.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mips.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mipsle.go#L7
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_mips64x.go#L9
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/sparc/include/asm/cache.h#L17
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/hexagon/include/asm/cache.h#L12
+        #[cfg_attr(
+            any(
+                target_arch = "arm",
+                target_arch = "mips",
+                target_arch = "mips32r6",
+                target_arch = "mips64",
+                target_arch = "mips64r6",
+                target_arch = "sparc",
+                target_arch = "hexagon",
+            ),
+            repr(align(32))
+        )]
+        // m68k has 16-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/m68k/include/asm/cache.h#L9
+        #[cfg_attr(target_arch = "m68k", repr(align(16)))]
+        // s390x has 256-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_s390x.go#L7
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/s390/include/asm/cache.h#L13
+        #[cfg_attr(target_arch = "s390x", repr(align(256)))]
+        // x86, wasm, riscv, and sparc64 have 64-byte cache line size.
+        //
+        // Sources:
+        // - https://github.com/golang/go/blob/dda2991c2ea0c5914714469c4defc2562a907230/src/internal/cpu/cpu_x86.go#L9
+        // - https://github.com/golang/go/blob/3dd58676054223962cd915bb0934d1f9f489d4d2/src/internal/cpu/cpu_wasm.go#L7
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/riscv/include/asm/cache.h#L10
+        // - https://github.com/torvalds/linux/blob/3516bd729358a2a9b090c1905bd2a3fa926e24c6/arch/sparc/include/asm/cache.h#L19
+        //
+        // All others are assumed to have 64-byte cache line size.
+        #[cfg_attr(
+            not(any(
+                target_arch = "x86_64",
+                target_arch = "aarch64",
+                target_arch = "arm64ec",
+                target_arch = "powerpc64",
+                target_arch = "arm",
+                target_arch = "mips",
+                target_arch = "mips32r6",
+                target_arch = "mips64",
+                target_arch = "mips64r6",
+                target_arch = "sparc",
+                target_arch = "hexagon",
+                target_arch = "m68k",
+                target_arch = "s390x",
+            )),
+            repr(align(64))
+        )]
+        $(#[$outer])*
+        $vis struct $name$(<$($lt),+>)? {
+            $(#[$field_inner_meta])*
+            $inner_vis inner: $inner_ty
+            $(
+                ,
+                $(#[$field_meta])*
+                $field_vis $field: $field_ty
+            )*
+        }
+    };
+
     (
         @INTERNAL IMPL
         $(#[$outer:meta])*

@@ -6,6 +6,59 @@
 use wrapper_lite::*;
 
 wrapper!(
+    #[wrapper_impl(From)]
+    #[repr(align(cache))]
+    pub struct TestWrapperCachePadded(String);
+);
+
+#[test]
+fn test_align_of_TestWrapperCachePadded() {
+    use core::mem::align_of;
+
+    #[cfg(any(
+        target_arch = "x86_64",
+        target_arch = "aarch64",
+        target_arch = "arm64ec",
+        target_arch = "powerpc64",
+    ))]
+    assert_eq!(align_of::<TestWrapperCachePadded>(), 128);
+
+    #[cfg(any(
+        target_arch = "arm",
+        target_arch = "mips",
+        target_arch = "mips32r6",
+        target_arch = "mips64",
+        target_arch = "mips64r6",
+        target_arch = "sparc",
+        target_arch = "hexagon",
+    ))]
+    assert_eq!(align_of::<TestWrapperCachePadded>(), 32);
+
+    #[cfg(target_arch = "m68k")]
+    assert_eq!(align_of::<TestWrapperCachePadded>(), 16);
+
+    #[cfg(target_arch = "s390x")]
+    assert_eq!(align_of::<TestWrapperCachePadded>(), 256);
+
+    #[cfg(not(any(
+        target_arch = "x86_64",
+        target_arch = "aarch64",
+        target_arch = "arm64ec",
+        target_arch = "powerpc64",
+        target_arch = "arm",
+        target_arch = "mips",
+        target_arch = "mips32r6",
+        target_arch = "mips64",
+        target_arch = "mips64r6",
+        target_arch = "sparc",
+        target_arch = "hexagon",
+        target_arch = "m68k",
+        target_arch = "s390x",
+    )))]
+    assert_eq!(align_of::<TestWrapperCachePadded>(), 64);
+}
+
+wrapper!(
     #[wrapper_impl(AsMut)]
     #[wrapper_impl(AsRef)]
     // #[wrapper_impl(Borrow)]
