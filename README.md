@@ -8,6 +8,31 @@ The new type idiom gives compile time guarantees that the right type of value is
 
 This crate provides a simple macro for you to create a wrapper over _any_ type.
 
+## Notable changes since v0.3.0
+
+- Starting from v0.3.1, the complex usage now accept any inner field name (but must be the first one).
+
+  ```rust
+  wrapper_lite::wrapper!(
+      #[wrapper_impl(AsRef<str>)]
+      pub struct TestWrapperComplex {
+          value: String, // <-- can be any name now, not necessarily "inner"
+          _marker: ::core::marker::PhantomData<()>,
+      }
+  );
+  ```
+
+- In v0.3.1, we introduce `#[repr(align(cache))]` attribute for the wrapper struct.
+
+  ```rust
+  wrapper_lite::wrapper!(
+      #[repr(align(cache))]
+      pub struct AlignedWrapper(u8);
+  );
+  ```
+
+  See the docs for usage details.
+
 ## Migrate from v0.2.X
 
 1. The macro now only accepts valid Rust struct syntax.
@@ -25,6 +50,7 @@ This crate provides a simple macro for you to create a wrapper over _any_ type.
        }
    );
    ```
+
 1. When there's no default value specified, we cannot implement the `From` trait for the wrapper type, and now it's a hard error.
 
    ```rust,compile_fail
