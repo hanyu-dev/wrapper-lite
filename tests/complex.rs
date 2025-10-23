@@ -8,7 +8,7 @@ use wrapper_lite::*;
 wrapper! {
     #[repr(align(cache))]
     pub struct TestWrapperCachePadded<'a, 'b> {
-        inner: String,
+        inner_can_be_any_name: String,
         _a: ::core::marker::PhantomData<&'a ()>,
         _b: ::core::marker::PhantomData<&'b ()>
     }
@@ -17,7 +17,7 @@ wrapper! {
 wrapper! {
     #[repr(align(cache))]
     pub struct TestWrapperCachePaddedWithDefault<'a, 'b> {
-        inner: String,
+        inner_can_be_any_name: String,
         _a: ::core::marker::PhantomData<&'a ()> = ::core::marker::PhantomData,
         _b: ::core::marker::PhantomData<&'b ()> = ::core::marker::PhantomData
     }
@@ -87,7 +87,7 @@ fn test_align_of_TestWrapperCachePadded() {
 
 wrapper! {
     pub struct TestWrapperEmptyWithTailing<'a, 'b> {
-        inner: String,
+        inner_can_be_any_name: String,
         _a: ::core::marker::PhantomData<&'a ()>,
         _b: ::core::marker::PhantomData<&'b ()>
     }
@@ -95,7 +95,7 @@ wrapper! {
 
 wrapper!(
     pub struct TestWrapperEmpty<'a, 'b> {
-        inner: String,
+        inner_can_be_any_name: String,
         _a: ::core::marker::PhantomData<&'a ()>,
         _b: ::core::marker::PhantomData<&'b ()>,
     }
@@ -103,7 +103,7 @@ wrapper!(
 
 wrapper! {
     pub struct TestWrapperEmptyWithDefault<'a, 'b> {
-        inner: String,
+        inner_can_be_any_name: String,
         _a: ::core::marker::PhantomData<&'a ()> = ::core::marker::PhantomData,
         _b: ::core::marker::PhantomData<&'b ()> = ::core::marker::PhantomData
     }
@@ -111,7 +111,7 @@ wrapper! {
 
 wrapper!(
     pub struct TestWrapperEmptyWithDefaultWithTailing<'a, 'b> {
-        inner: String,
+        inner_can_be_any_name: String,
         _a: ::core::marker::PhantomData<&'a ()> = ::core::marker::PhantomData,
         _b: ::core::marker::PhantomData<&'b ()> = ::core::marker::PhantomData,
     }
@@ -129,7 +129,7 @@ wrapper! {
     #[derive(Clone)]
     #[repr(transparent)]
     pub struct TestWrapperComplexConstFromInner<'a, 'b> {
-        inner: String,
+        inner_can_be_any_name: String,
         _a: ::core::marker::PhantomData<&'a ()> = ::core::marker::PhantomData,
         _b: ::core::marker::PhantomData<&'b ()> = ::core::marker::PhantomData
     }
@@ -164,7 +164,7 @@ wrapper! {
     #[repr(transparent)]
     #[derive(Clone)]
     pub struct TestWrapperComplex<'a, 'b: 'a, P: Sized + Clone> {
-        inner: P,
+        inner_can_be_any_name: P,
         _a: ::core::marker::PhantomData<&'a ()>,
         _b: ::core::marker::PhantomData<&'b ()>
     }

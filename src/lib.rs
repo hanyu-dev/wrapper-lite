@@ -133,7 +133,7 @@ macro_rules! general_wrapper {
 ///
 /// There're some limitations:
 ///
-/// - The inner field must be named as `inner`.
+/// - The inner field must be the first field declared in the struct.
 /// - When there's no default value specified, we cannot implement the `From`
 ///   trait for the wrapper type.
 /// - The macro does not know if other fields were zero-sized types (ZST), hence
@@ -502,7 +502,7 @@ macro_rules! wrapper {
         $(#[$outer:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -599,7 +599,7 @@ macro_rules! wrapper {
         $(#[$outer])*
         $vis struct $name$(<$($lt),+>)? {
             $(#[$field_inner_meta])*
-            $inner_vis inner: $inner_ty,
+            $inner_vis $inner: $inner_ty,
             $(
                 $(#[$field_meta])*
                 $field_vis $field: $field_ty
@@ -609,9 +609,9 @@ macro_rules! wrapper {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             #[inline(always)]
             #[doc = concat!("Creates a new instance of [`", stringify!($name), "`]")]
-            $inner_vis const fn const_from(inner: $inner_ty) -> Self {
+            $inner_vis const fn const_from($inner: $inner_ty) -> Self {
                 Self {
-                    inner,
+                    $inner,
                     $(
                         $field: $field_default,
                     )*
@@ -625,7 +625,7 @@ macro_rules! wrapper {
         $(#[$outer:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -637,7 +637,7 @@ macro_rules! wrapper {
         $(#[$outer])*
         $vis struct $name$(<$($lt),+>)? {
             $(#[$field_inner_meta])*
-            $inner_vis inner: $inner_ty,
+            $inner_vis $inner: $inner_ty,
             $(
                 $(#[$field_meta])*
                 $field_vis $field: $field_ty
@@ -647,9 +647,9 @@ macro_rules! wrapper {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? $name$(<$($lt),+>)? {
             #[inline(always)]
             #[doc = concat!("Creates a new instance of [`", stringify!($name), "`]")]
-            $inner_vis const fn const_from(inner: $inner_ty) -> Self {
+            $inner_vis const fn const_from($inner: $inner_ty) -> Self {
                 Self {
-                    inner,
+                    $inner,
                     $(
                         $field: $field_default,
                     )*
@@ -665,7 +665,7 @@ macro_rules! wrapper {
         $(#[$outer:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -762,7 +762,7 @@ macro_rules! wrapper {
         $(#[$outer])*
         $vis struct $name$(<$($lt),+>)? {
             $(#[$field_inner_meta])*
-            $inner_vis inner: $inner_ty
+            $inner_vis $inner: $inner_ty
             $(
                 ,
                 $(#[$field_meta])*
@@ -776,7 +776,7 @@ macro_rules! wrapper {
         $(#[$outer:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -788,7 +788,7 @@ macro_rules! wrapper {
         $(#[$outer])*
         $vis struct $name$(<$($lt),+>)? {
             $(#[$field_inner_meta])*
-            $inner_vis inner: $inner_ty
+            $inner_vis $inner: $inner_ty
             $(
                 ,
                 $(#[$field_meta])*
@@ -996,7 +996,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1007,7 +1007,7 @@ macro_rules! wrapper {
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$target> for $name$(<$($lt),+>)? {
             fn as_ref(&self) -> &$target {
-                &self.inner
+                &self.$inner
             }
         }
     };
@@ -1035,7 +1035,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1046,7 +1046,7 @@ macro_rules! wrapper {
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsRef<$inner_ty> for $name$(<$($lt),+>)? {
             fn as_ref(&self) -> &$inner_ty {
-                &self.inner
+                &self.$inner
             }
         }
 
@@ -1054,7 +1054,7 @@ macro_rules! wrapper {
             /// Returns a reference to the inner value.
             #[inline(always)]
             pub const fn as_inner(&self) -> &$inner_ty {
-                &self.inner
+                &self.$inner
             }
         }
     };
@@ -1078,7 +1078,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1090,7 +1090,7 @@ macro_rules! wrapper {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$target> for $name$(<$($lt),+>)? {
             #[inline(always)]
             fn as_mut(&mut self) -> &mut $target {
-                &mut self.inner
+                &mut self.$inner
             }
         }
     };
@@ -1118,7 +1118,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1130,7 +1130,7 @@ macro_rules! wrapper {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
             #[inline(always)]
             fn as_mut(&mut self) -> &mut $inner_ty {
-                &mut self.inner
+                &mut self.$inner
             }
         }
 
@@ -1138,7 +1138,7 @@ macro_rules! wrapper {
             #[inline(always)]
             /// Returns a mutable reference to the inner value.
             pub fn as_inner_mut(&mut self) -> &mut $inner_ty {
-                &mut self.inner
+                &mut self.$inner
             }
         }
     };
@@ -1158,7 +1158,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1170,7 +1170,7 @@ macro_rules! wrapper {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$target> for $name$(<$($lt),+>)? {
             #[inline(always)]
             fn as_mut(&mut self) -> &mut $target {
-                &mut self.inner
+                &mut self.$inner
             }
         }
     };
@@ -1198,7 +1198,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1210,7 +1210,7 @@ macro_rules! wrapper {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::AsMut<$inner_ty> for $name$(<$($lt),+>)? {
             #[inline(always)]
             fn as_mut(&mut self) -> &mut $inner_ty {
-                &mut self.inner
+                &mut self.$inner
             }
         }
 
@@ -1218,7 +1218,7 @@ macro_rules! wrapper {
             #[inline(always)]
             /// Returns a mutable reference to the inner value.
             pub const fn as_inner_mut(&mut self) -> &mut $inner_ty {
-                &mut self.inner
+                &mut self.$inner
             }
         }
     };
@@ -1241,7 +1241,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1252,7 +1252,7 @@ macro_rules! wrapper {
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$target> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$target {
-                &self.inner
+                &self.$inner
             }
         }
     };
@@ -1272,7 +1272,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1283,7 +1283,7 @@ macro_rules! wrapper {
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::Borrow<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow(&self) -> &$inner_ty {
-                &self.inner
+                &self.$inner
             }
         }
     };
@@ -1306,7 +1306,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1317,7 +1317,7 @@ macro_rules! wrapper {
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::BorrowMut<$target> for $name$(<$($lt),+>)? {
             fn borrow_mut(&mut self) -> &mut $target {
-                &mut self.inner
+                &mut self.$inner
             }
         }
     };
@@ -1337,7 +1337,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1348,7 +1348,7 @@ macro_rules! wrapper {
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::borrow::BorrowMut<$inner_ty> for $name$(<$($lt),+>)? {
             fn borrow_mut(&mut self) -> &mut $inner_ty {
-                &mut self.inner
+                &mut self.$inner
             }
         }
     };
@@ -1374,7 +1374,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1388,7 +1388,7 @@ macro_rules! wrapper {
             $inner_ty: ::core::fmt::Debug,
         {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                self.inner.fmt(f)
+                self.$inner.fmt(f)
             }
         }
     };
@@ -1411,7 +1411,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1447,7 +1447,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1460,7 +1460,7 @@ macro_rules! wrapper {
             type Target = $target;
 
             fn deref(&self) -> &Self::Target {
-                &self.inner
+                &self.$inner
             }
         }
     };
@@ -1482,7 +1482,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1495,7 +1495,7 @@ macro_rules! wrapper {
             type Target = $inner_ty;
 
             fn deref(&self) -> &Self::Target {
-                &self.inner
+                &self.$inner
             }
         }
     };
@@ -1518,7 +1518,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1529,7 +1529,7 @@ macro_rules! wrapper {
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
             fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.inner
+                &mut self.$inner
             }
         }
     };
@@ -1549,7 +1549,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1560,7 +1560,7 @@ macro_rules! wrapper {
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::ops::DerefMut for $name$(<$($lt),+>)? {
             fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.inner
+                &mut self.$inner
             }
         }
     };
@@ -1592,7 +1592,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*
@@ -1602,8 +1602,8 @@ macro_rules! wrapper {
         }
     ) => {
         impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::convert::From<$inner_ty> for $name$(<$($lt),+>)? {
-            fn from(inner: $inner_ty) -> Self {
-                Self::const_from(inner)
+            fn from($inner: $inner_ty) -> Self {
+                Self::const_from($inner)
             }
         }
 
@@ -1611,8 +1611,8 @@ macro_rules! wrapper {
             /// Creates a new instance of the wrapper type from the inner value.
             #[allow(unreachable_pub)]
             #[inline(always)]
-            pub const fn from(inner: $inner_ty) -> Self {
-                Self::const_from(inner)
+            pub const fn from($inner: $inner_ty) -> Self {
+                Self::const_from($inner)
             }
         }
     };
@@ -1621,7 +1621,7 @@ macro_rules! wrapper {
         $(#[$meta:meta])*
         $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
             $(#[$field_inner_meta:meta])*
-            $inner_vis:vis inner: $inner_ty:ty
+            $inner_vis:vis $inner:ident: $inner_ty:ty
             $(
                 ,
                 $(#[$field_meta:meta])*

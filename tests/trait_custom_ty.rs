@@ -36,7 +36,7 @@ wrapper!(
 wrapper!(
     #[wrapper_impl(AsRef<[u8]>)]
     pub struct TestComplexWrapperAsRefStruct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -45,7 +45,7 @@ wrapper!(
     #[wrapper_impl(AsRef)]
     #[wrapper_impl(AsRef<[u8]>)]
     pub struct TestComplexWrapperAsRefComplex0Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -54,7 +54,7 @@ wrapper!(
     #[wrapper_impl(AsRef<[u8]>)]
     #[wrapper_impl(AsRef)]
     pub struct TestComplexWrapperAsRefComplex1Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -63,7 +63,7 @@ wrapper!(
     #[wrapper_impl(AsRef<[u8]>)]
     #[wrapper_impl(AsRef<Vec<u8>>)]
     pub struct TestComplexWrapperAsRefComplex2Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -123,7 +123,7 @@ wrapper!(
 wrapper!(
     #[wrapper_impl(AsMut<[u8]>)]
     pub struct TestComplexWrapperAsMutStruct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -132,7 +132,7 @@ wrapper!(
     #[wrapper_impl(AsMut)]
     #[wrapper_impl(AsMut<[u8]>)]
     pub struct TestComplexWrapperAsMutComplex0Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -141,7 +141,7 @@ wrapper!(
     #[wrapper_impl(AsMut<[u8]>)]
     #[wrapper_impl(AsMut)]
     pub struct TestComplexWrapperAsMutComplex1Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -150,7 +150,7 @@ wrapper!(
     #[wrapper_impl(AsMut<[u8]>)]
     #[wrapper_impl(AsMut<Vec<u8>>)]
     pub struct TestComplexWrapperAsMutComplex2Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -210,7 +210,7 @@ wrapper!(
 wrapper!(
     #[wrapper_impl(Borrow<[u8]>)]
     pub struct TestComplexWrapperBorrowStruct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -219,7 +219,7 @@ wrapper!(
     #[wrapper_impl(Borrow)]
     #[wrapper_impl(Borrow<[u8]>)]
     pub struct TestComplexWrapperBorrowComplex0Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -228,7 +228,7 @@ wrapper!(
     #[wrapper_impl(Borrow<[u8]>)]
     #[wrapper_impl(Borrow)]
     pub struct TestComplexWrapperBorrowComplex1Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -237,7 +237,7 @@ wrapper!(
     #[wrapper_impl(Borrow<[u8]>)]
     #[wrapper_impl(Borrow<Vec<u8>>)]
     pub struct TestComplexWrapperBorrowComplex2Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -297,7 +297,7 @@ wrapper!(
 wrapper!(
     #[wrapper_impl(BorrowMut<[u8]>)]
     pub struct TestComplexWrapperBorrowMutStruct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -306,7 +306,7 @@ wrapper!(
     #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(BorrowMut<[u8]>)]
     pub struct TestComplexWrapperBorrowMutComplex0Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -315,7 +315,7 @@ wrapper!(
     #[wrapper_impl(BorrowMut<[u8]>)]
     #[wrapper_impl(BorrowMut)]
     pub struct TestComplexWrapperBorrowMutComplex1Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -324,7 +324,7 @@ wrapper!(
     #[wrapper_impl(BorrowMut<[u8]>)]
     #[wrapper_impl(BorrowMut<Vec<u8>>)]
     pub struct TestComplexWrapperBorrowMutComplex2Struct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -366,7 +366,7 @@ wrapper!(
 wrapper!(
     #[wrapper_impl(Deref<[u8]>)]
     pub struct TestComplexWrapperDerefStruct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
@@ -396,7 +396,7 @@ wrapper!(
 wrapper!(
     #[wrapper_impl(DerefMut<[u8]>)]
     pub struct TestComplexWrapperDerefMutStruct {
-        inner: Vec<u8>,
+        inner_can_be_any_name: Vec<u8>,
         _a: ::core::marker::PhantomData<&'static ()>,
     }
 );
