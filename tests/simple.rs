@@ -167,6 +167,19 @@ wrapper!(
     pub struct TestWrapperImplDisplay(String);
 );
 
+#[test]
+fn assert_wrapper_impl_display() {
+    let test_string = String::from("Hello, world!");
+
+    assert_eq!(
+        format!(
+            "{}",
+            TestWrapperImplDisplay::const_from(test_string.clone())
+        ),
+        format!("{}", test_string),
+    );
+}
+
 fn assert_impls_TestWrapperImplDisplay() {
     _assert_impl_display::<TestWrapperImplDisplay>();
 }
@@ -177,11 +190,35 @@ wrapper!(
     pub struct TestWrapperImplDebugMixed(String);
 );
 
+#[test]
+fn assert_wrapper_impl_debug() {
+    let test_string = String::from("Hello, world!");
+
+    assert_eq!(
+        format!(
+            "{:?}",
+            TestWrapperImplDebugMixed::const_from(test_string.clone())
+        ),
+        format!("{:?}", test_string),
+    );
+}
+
 wrapper!(
     #[wrapper_impl(DebugName)]
     #[derive(Default)]
     pub struct TestWrapperImplDebugNameMixed(String);
 );
+
+#[test]
+fn assert_wrapper_impl_debug_name() {
+    assert_eq!(
+        format!(
+            "{:?}",
+            TestWrapperImplDebugNameMixed::const_from(String::from("Hello, world!"))
+        ),
+        "TestWrapperImplDebugNameMixed",
+    );
+}
 
 fn assert_impls_TestWrapperImplDebugNameMixed() {
     _assert_impl_debug::<TestWrapperImplDebugMixed>();

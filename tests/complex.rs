@@ -160,6 +160,7 @@ wrapper! {
     // #[wrapper_impl(Borrow)]
     #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(Debug)]
+    #[wrapper_impl(Display)]
     // #[wrapper_impl(Deref)]
     #[wrapper_impl(DerefMut)]
     // #[wrapper_impl(From)]
@@ -175,6 +176,7 @@ wrapper! {
 #[test]
 fn assert_impls_TestWrapperComplex() {
     _assert_impl_debug::<TestWrapperComplex<'_, '_, String>>();
+    _assert_impl_display::<TestWrapperComplex<'_, '_, String>>();
     _assert_impl_as_ref::<TestWrapperComplex<'_, '_, String>, _>();
     _assert_impl_as_mut::<TestWrapperComplex<'_, '_, String>, _>();
     _assert_impl_borrow::<TestWrapperComplex<'_, '_, String>, String>();
@@ -186,6 +188,40 @@ fn assert_impls_TestWrapperComplex() {
     assert_eq!(
         core::mem::size_of::<TestWrapperComplex<'_, '_, String>>(),
         core::mem::size_of::<String>()
+    );
+}
+
+#[test]
+fn assert_wrapper_impl_debug() {
+    let test_string = String::from("Hello, world!");
+
+    assert_eq!(
+        format!(
+            "{:?}",
+            TestWrapperComplex {
+                inner_can_be_any_name: test_string.clone(),
+                _a: ::core::marker::PhantomData,
+                _b: ::core::marker::PhantomData,
+            }
+        ),
+        format!("{:?}", test_string),
+    );
+}
+
+#[test]
+fn assert_wrapper_impl_display() {
+    let test_string = String::from("Hello, world!");
+
+    assert_eq!(
+        format!(
+            "{}",
+            TestWrapperComplex {
+                inner_can_be_any_name: test_string.clone(),
+                _a: ::core::marker::PhantomData,
+                _b: ::core::marker::PhantomData,
+            }
+        ),
+        format!("{}", test_string),
     );
 }
 
