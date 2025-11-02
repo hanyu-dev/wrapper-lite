@@ -123,6 +123,7 @@ wrapper! {
     // #[wrapper_impl(Borrow)]
     #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(Debug)]
+    #[wrapper_impl(Display)]
     // #[wrapper_impl(Deref)]
     #[wrapper_impl(DerefMut)]
     #[wrapper_impl(From)]
@@ -138,6 +139,7 @@ wrapper! {
 #[test]
 fn assert_impls_TestWrapperComplexConstFromInner() {
     _assert_impl_debug::<TestWrapperComplexConstFromInner<'_, '_>>();
+    _assert_impl_display::<TestWrapperComplexConstFromInner<'_, '_>>();
     _assert_impl_as_ref::<TestWrapperComplexConstFromInner<'_, '_>, _>();
     _assert_impl_as_mut::<TestWrapperComplexConstFromInner<'_, '_>, _>();
     _assert_impl_borrow::<TestWrapperComplexConstFromInner<'_, '_>, String>();
@@ -192,6 +194,12 @@ fn assert_impls_TestWrapperComplex() {
 fn _assert_impl_debug<T>()
 where
     T: ::core::fmt::Debug,
+{
+}
+
+fn _assert_impl_display<T>()
+where
+    T: ::core::fmt::Display,
 {
 }
 

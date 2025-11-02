@@ -178,6 +178,26 @@ macro_rules! general_wrapper {
 ///     "ExampleWrapperDebugName"
 /// );
 /// ```
+/// 
+/// ### `Display`
+/// 
+/// Like `Debug`.
+/// 
+/// ```rust
+/// wrapper_lite::wrapper!(
+///     #[wrapper_impl(Display)]
+///     #[derive(Clone, Copy)]
+///     pub struct ExampleWrapperDisplay<'a, P>(&'a P);
+/// );
+///
+/// let data = "Hello".to_string();
+///
+/// // Here we transparently print the debug output of the inner type.
+/// assert_eq!(
+///     format!("{}", ExampleWrapperDisplay { inner: &data }),
+///     "Hello"
+/// );
+/// ```
 ///
 /// ### `ConstAsMut`
 ///
@@ -354,6 +374,16 @@ macro_rules! wrapper {
     (
         @INTERNAL IMPL
         #[wrapper_impl(DebugName)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNAL IMPL
+            $($tt)*
+        }
+    };
+    (
+        @INTERNAL IMPL
+        #[wrapper_impl(Display)]
         $($tt:tt)*
     ) => {
         $crate::wrapper! {
@@ -923,6 +953,23 @@ macro_rules! wrapper {
         }
     };
 
+    // Extract wrapper impl for `Display` trait.
+    (
+        @INTERNAL WRAPPER_IMPL
+        #[wrapper_impl(Display)]
+        $($tt:tt)*
+    ) => {
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL_DISPLAY
+            $($tt)*
+        }
+
+        $crate::wrapper! {
+            @INTERNAL WRAPPER_IMPL
+            $($tt)*
+        }
+    };
+
     // Extract wrapper impl for `Deref` trait.
     (
         @INTERNAL WRAPPER_IMPL
@@ -1427,6 +1474,46 @@ macro_rules! wrapper {
         }
     };
     // ================ Impl `DebugName` trait for the wrapper type. ================
+
+    // ================ Impl `Display` trait for the wrapper type. ================
+    (
+        @INTERNAL WRAPPER_IMPL_DISPLAY
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? ($inner_vis:vis $inner_ty:ty);
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Display for $name$(<$($lt),+>)?
+        where
+            $inner_ty: ::core::fmt::Display,
+        {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                self.inner.fmt(f)
+            }
+        }
+    };
+    (
+        @INTERNAL WRAPPER_IMPL_DISPLAY
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident$(<$($lt:tt$(:$clt:tt$(+$dlt:tt)*)?),+>)? {
+            $(#[$field_inner_meta:meta])*
+            $inner_vis:vis $inner:ident: $inner_ty:ty
+            $(
+                ,
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $field_ty:ty$( = $field_default: expr)?
+            )*
+            $(,)?
+        }
+    ) => {
+        impl$(<$($lt$(:$clt$(+$dlt)*)?),+>)? ::core::fmt::Display for $name$(<$($lt),+>)?
+        where
+            $inner_ty: ::core::fmt::Display,
+        {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                self.$inner.fmt(f)
+            }
+        }
+    };
+    // ================ Impl `Display` trait for the wrapper type. ================
 
     // ================ Impl `Deref` trait for the wrapper type. ================
     (

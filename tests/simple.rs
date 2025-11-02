@@ -64,6 +64,7 @@ wrapper!(
     // #[wrapper_impl(Borrow)]
     #[wrapper_impl(BorrowMut)]
     #[wrapper_impl(Debug)]
+    #[wrapper_impl(Display)]
     #[wrapper_impl(DerefMut)]
     #[wrapper_impl(From)] // Multiple wrapper_impl attributes
     #[derive(Clone, Default)]
@@ -75,6 +76,7 @@ wrapper!(
 #[test]
 fn assert_impls_TestWrapperAllMixed() {
     _assert_impl_debug::<TestWrapperAllMixed>();
+    _assert_impl_display::<TestWrapperAllMixed>();
     _assert_impl_as_ref::<TestWrapperAllMixed, _>();
     _assert_impl_as_mut::<TestWrapperAllMixed, _>();
     _assert_impl_borrow::<TestWrapperAllMixed, String>();
@@ -158,6 +160,15 @@ wrapper!(
 fn assert_impls_TestWrapperImplDebug() {
     _assert_impl_debug::<TestWrapperImplDebug>();
     _assert_impl_debug::<TestWrapperImplDebugName>();
+}
+
+wrapper!(
+    #[wrapper_impl(Display)]
+    pub struct TestWrapperImplDisplay(String);
+);
+
+fn assert_impls_TestWrapperImplDisplay() {
+    _assert_impl_display::<TestWrapperImplDisplay>();
 }
 
 wrapper!(
@@ -272,6 +283,12 @@ fn assert_impls_TestWrapperImplFromDerefMixed<P: core::fmt::Debug>() {
 fn _assert_impl_debug<T>()
 where
     T: ::core::fmt::Debug,
+{
+}
+
+fn _assert_impl_display<T>()
+where
+    T: ::core::fmt::Display,
 {
 }
 
